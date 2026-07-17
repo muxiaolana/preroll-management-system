@@ -66,6 +66,11 @@ tbody tr:hover { background: #f8fafc; }
 .tree-item .arrow.expanded { transform: rotate(90deg); }
 .tree-children { padding-left: 24px; }
 .tree-badge { background: #f1f5f9; color: #64748b; font-size: 11px; padding: 1px 6px; border-radius: 10px; margin-left: auto; }
+.tree-edit { color: #c4b5fd; font-size: 12px; cursor: pointer; opacity: 0; transition: opacity .15s, color .15s; }
+.tree-edit:hover { color: #7c3aed; }
+.tree-item:hover .tree-edit { opacity: 1; }
+.tree-item.tree-active { background: #ede9fe; color: #6d28d9; font-weight: 600; box-shadow: inset 3px 0 0 #7c3aed; }
+.tree-item.tree-active .tree-edit { opacity: 1; }
 .card-section { background: #fff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 20px; margin-bottom: 16px; }
 .card-section .section-title { font-size: 15px; font-weight: 600; color: #1e293b; margin-bottom: 16px; display: flex; align-items: center; justify-content: space-between; }
 .tab-bar { display: flex; gap: 2px; background: #f1f5f9; border-radius: 8px; padding: 3px; width: fit-content; margin-bottom: 16px; }
@@ -107,6 +112,29 @@ tbody tr:hover { background: #f8fafc; }
 .fs-done { background: #d1fae5; color: #065f46; }
 .fs-pushed { background: #ede9fe; color: #7c3aed; }
 .fs-failed { background: #fee2e2; color: #991b1b; }
+
+/* ===== Cascader 级联选择器 ===== */
+.cascader { position: relative; display: inline-block; }
+.cascader-trigger { display: flex; align-items: center; justify-content: space-between; gap: 8px; min-width: 220px; font-size: 12px; border: 1px solid #e2e8f0; border-radius: 8px; padding: 6px 10px; color: #334155; background: #fff; cursor: pointer; user-select: none; }
+.cascader-trigger .cascader-placeholder { color: #94a3b8; }
+.cascader-trigger .cascader-caret { color: #94a3b8; font-size: 10px; transition: transform .15s; }
+.cascader.open .cascader-trigger { border-color: #c4b5fd; box-shadow: 0 0 0 2px #ede9fe; }
+.cascader.open .cascader-trigger .cascader-caret { transform: rotate(180deg); }
+.cascader-panel { position: absolute; z-index: 60; top: calc(100% + 4px); left: 0; display: none; background: #fff; border: 1px solid #e2e8f0; border-radius: 8px; box-shadow: 0 8px 24px rgba(15,23,42,.12); overflow: hidden; }
+.cascader.open .cascader-panel { display: flex; }
+.cascader-col { min-width: 130px; max-height: 240px; overflow-y: auto; padding: 4px 0; border-right: 1px solid #f1f5f9; }
+.cascader-col:last-child { border-right: none; }
+.cascader-option { display: flex; align-items: center; justify-content: space-between; gap: 10px; font-size: 12px; color: #334155; padding: 6px 12px; cursor: pointer; white-space: nowrap; }
+.cascader-option:hover { background: #f8fafc; }
+.cascader-option.active { background: #ede9fe; color: #6d28d9; font-weight: 600; }
+.cascader-option .opt-arrow { color: #cbd5e1; font-size: 10px; }
+.cascader-option .opt-check { width: 14px; height: 14px; flex-shrink: 0; border: 1px solid #cbd5e1; border-radius: 3px; display: inline-flex; align-items: center; justify-content: center; font-size: 10px; line-height: 1; color: #fff; background: #fff; }
+.cascader-option.checked { color: #6d28d9; font-weight: 600; }
+.cascader-option.checked .opt-check { background: #7c3aed; border-color: #7c3aed; }
+.cascader-trigger.multi { flex-wrap: wrap; align-items: flex-start; min-height: 32px; }
+.cascader-trigger .cascader-tag { display: inline-flex; align-items: center; gap: 4px; background: #ede9fe; color: #6d28d9; font-size: 11px; padding: 2px 6px; border-radius: 10px; }
+.cascader-trigger .cascader-tag .tag-x { cursor: pointer; font-weight: 700; }
+.cascader-trigger .cascader-tags { display: flex; flex-wrap: wrap; gap: 4px; flex: 1; }
 </style>
 </head>
 <body>
@@ -143,35 +171,6 @@ tbody tr:hover { background: #f8fafc; }
         </div>
       </div>
 
-      <!-- KPI -->
-      <div style="display:grid; grid-template-columns:repeat(5,1fr); gap:12px; margin-bottom:20px;">
-        <div class="kpi-card">
-          <div class="value">128</div>
-          <div class="label">种子总数</div>
-          <div class="sub">本周新增 +12</div>
-        </div>
-        <div class="kpi-card">
-          <div class="value">89</div>
-          <div class="label">已裂变</div>
-          <div class="sub">裂变率 69.5%</div>
-        </div>
-        <div class="kpi-card">
-          <div class="value">1,842</div>
-          <div class="label">累计裂变素材</div>
-          <div class="sub">均裂变 20.7条/种子</div>
-        </div>
-        <div class="kpi-card">
-          <div class="value">¥284.6万</div>
-          <div class="label">种子关联消耗</div>
-          <div class="sub">昨日 ¥8.2万</div>
-        </div>
-        <div class="kpi-card">
-          <div class="value">34</div>
-          <div class="label">外部录入转化</div>
-          <div class="sub">录入转化率 9.6%</div>
-        </div>
-      </div>
-
       <!-- 筛选区 -->
       <div class="card-section" style="padding:16px 20px;">
         <!-- 第一行：结构化查询 -->
@@ -194,24 +193,16 @@ tbody tr:hover { background: #f8fafc; }
           </select>
         </div>
 
-        <!-- 第二行：标签 / 来源 / 状态 -->
+        <!-- 第二行：标签维度（Cascader 级联选择器，与标签管理一致） -->
         <div class="filter-row">
           <span class="filter-label">标签：</span>
-          <select class="filter-select">
-            <option>全部题材</option>
-            <option>都市</option>
-            <option>古言</option>
-            <option>玄幻</option>
-            <option>甜宠</option>
-            <option>悬疑</option>
-          </select>
-          <select class="filter-select">
-            <option>全部人群</option>
-            <option>女频</option>
-            <option>男频</option>
-            <option>25-34岁</option>
-            <option>高付费意愿</option>
-          </select>
+          <div id="seed-filter-cascader"></div>
+        </div>
+
+        <!-- 第三行：标签包含 / 来源 / 状态 -->
+        <div class="filter-row">
+          <span class="filter-label">标签包含：</span>
+          <input class="search-input" placeholder="输入标签关键词，多个用空格分隔" style="width:240px; padding:6px 10px; font-size:13px;">
 
           <span class="filter-label" style="margin-left:6px;">来源：</span>
           <select class="filter-select">
@@ -237,6 +228,12 @@ tbody tr:hover { background: #f8fafc; }
 
       <!-- 列表 -->
       <div class="card-section" style="padding:0; overflow:hidden;">
+        <!-- 批量操作栏 -->
+        <div style="display:flex; align-items:center; gap:10px; padding:10px 16px; border-bottom:1px solid #f1f5f9; background:#fafafa;">
+          <span style="font-size:12px; color:#64748b;">已选 <span id="seed-selected-count" style="color:#7c3aed; font-weight:600;">0</span> 项</span>
+          <button class="btn btn-outline" style="font-size:12px;" onclick="batchDownloadSeeds()">批量下载</button>
+          <button class="btn btn-primary" style="font-size:12px;" onclick="batchFission()">批量发起裂变</button>
+        </div>
         <table>
           <thead>
             <tr>
@@ -249,7 +246,9 @@ tbody tr:hover { background: #f8fafc; }
               <th>关联消耗</th>
               <th>来源</th>
               <th>上传时间</th>
+              <th>操作人</th>
               <th>状态</th>
+              <th>备注信息</th>
               <th>操作</th>
             </tr>
           </thead>
@@ -264,10 +263,13 @@ tbody tr:hover { background: #f8fafc; }
               <td>¥18.6万</td>
               <td><span class="pill pill-source">自制</span></td>
               <td style="color:#94a3b8;">06-28</td>
+              <td>张伟</td>
               <td><span class="pill pill-status-active">启用</span></td>
+              <td style="color:#64748b; max-width:180px;">开头3秒强冲突，跑量表现优异</td>
               <td>
+                <button class="btn btn-outline" style="padding:4px 8px; font-size:11px;" onclick="downloadSeed(this)">下载</button>
                 <button class="btn btn-outline" style="padding:4px 8px; font-size:11px;">裂变</button>
-                <button class="btn btn-outline" style="padding:4px 8px; font-size:11px;">编辑</button>
+                <button class="btn btn-outline" style="padding:4px 8px; font-size:11px;" onclick="openSeedEdit('霸总归来_开场1','张伟')">编辑</button>
               </td>
             </tr>
             <tr>
@@ -280,10 +282,13 @@ tbody tr:hover { background: #f8fafc; }
               <td>¥12.3万</td>
               <td><span class="pill pill-source">自制</span></td>
               <td style="color:#94a3b8;">06-25</td>
+              <td>李娜</td>
               <td><span class="pill pill-status-active">启用</span></td>
+              <td style="color:#64748b; max-width:180px;">男频爽感强，适合修仙题材裂变</td>
               <td>
+                <button class="btn btn-outline" style="padding:4px 8px; font-size:11px;" onclick="downloadSeed(this)">下载</button>
                 <button class="btn btn-outline" style="padding:4px 8px; font-size:11px;">裂变</button>
-                <button class="btn btn-outline" style="padding:4px 8px; font-size:11px;">编辑</button>
+                <button class="btn btn-outline" style="padding:4px 8px; font-size:11px;" onclick="openSeedEdit('仙门弃徒_觉醒A','李娜')">编辑</button>
               </td>
             </tr>
             <tr>
@@ -296,10 +301,13 @@ tbody tr:hover { background: #f8fafc; }
               <td>¥31.2万</td>
               <td><span class="pill" style="background:#fef3c7; color:#92400e;">外部录入</span></td>
               <td style="color:#94a3b8;">06-22</td>
+              <td>王强</td>
               <td><span class="pill pill-status-active">启用</span></td>
+              <td style="color:#64748b; max-width:180px;">外部采买，复仇爽点密集，重点复用</td>
               <td>
+                <button class="btn btn-outline" style="padding:4px 8px; font-size:11px;" onclick="downloadSeed(this)">下载</button>
                 <button class="btn btn-outline" style="padding:4px 8px; font-size:11px;">裂变</button>
-                <button class="btn btn-outline" style="padding:4px 8px; font-size:11px;">编辑</button>
+                <button class="btn btn-outline" style="padding:4px 8px; font-size:11px;" onclick="openSeedEdit('千金复仇_狠人版','王强')">编辑</button>
               </td>
             </tr>
             <tr>
@@ -312,10 +320,13 @@ tbody tr:hover { background: #f8fafc; }
               <td>¥6.8万</td>
               <td><span class="pill pill-source">自制</span></td>
               <td style="color:#94a3b8;">06-20</td>
+              <td>陈静</td>
               <td><span class="pill pill-status-paused">暂停</span></td>
+              <td style="color:#64748b; max-width:180px;">节奏偏慢，待优化后再投</td>
               <td>
+                <button class="btn btn-outline" style="padding:4px 8px; font-size:11px;" onclick="downloadSeed(this)">下载</button>
                 <button class="btn btn-outline" style="padding:4px 8px; font-size:11px;">裂变</button>
-                <button class="btn btn-outline" style="padding:4px 8px; font-size:11px;">编辑</button>
+                <button class="btn btn-outline" style="padding:4px 8px; font-size:11px;" onclick="openSeedEdit('重生商战_谈判篇','陈静')">编辑</button>
               </td>
             </tr>
             <tr>
@@ -328,10 +339,13 @@ tbody tr:hover { background: #f8fafc; }
               <td>¥9.4万</td>
               <td><span class="pill pill-source">自制</span></td>
               <td style="color:#94a3b8;">06-18</td>
+              <td>张伟</td>
               <td><span class="pill pill-status-active">启用</span></td>
+              <td style="color:#64748b; max-width:180px;">情绪张力足，女频虐恋首选</td>
               <td>
+                <button class="btn btn-outline" style="padding:4px 8px; font-size:11px;" onclick="downloadSeed(this)">下载</button>
                 <button class="btn btn-outline" style="padding:4px 8px; font-size:11px;">裂变</button>
-                <button class="btn btn-outline" style="padding:4px 8px; font-size:11px;">编辑</button>
+                <button class="btn btn-outline" style="padding:4px 8px; font-size:11px;" onclick="openSeedEdit('古言虐恋_雨夜逃','张伟')">编辑</button>
               </td>
             </tr>
             <tr>
@@ -344,10 +358,13 @@ tbody tr:hover { background: #f8fafc; }
               <td>—</td>
               <td><span class="pill" style="background:#fef3c7; color:#92400e;">外部录入</span></td>
               <td style="color:#94a3b8;">06-15</td>
+              <td>李娜</td>
               <td><span class="pill pill-status-archived">归档</span></td>
+              <td style="color:#64748b; max-width:180px;">未起量，暂归档留存</td>
               <td>
+                <button class="btn btn-outline" style="padding:4px 8px; font-size:11px;" onclick="downloadSeed(this)">下载</button>
                 <button class="btn btn-outline" style="padding:4px 8px; font-size:11px;">裂变</button>
-                <button class="btn btn-outline" style="padding:4px 8px; font-size:11px;">编辑</button>
+                <button class="btn btn-outline" style="padding:4px 8px; font-size:11px;" onclick="openSeedEdit('末世求生_暗夜版','李娜')">编辑</button>
               </td>
             </tr>
           </tbody>
@@ -382,7 +399,6 @@ tbody tr:hover { background: #f8fafc; }
         <div class="tab-item" onclick="switchTagTab(this,'era')">年代</div>
         <div class="tab-item" onclick="switchTagTab(this,'gender')">受众频道</div>
         <div class="tab-item" onclick="switchTagTab(this,'crowd')">特定人群</div>
-        <div class="tab-item" onclick="switchTagTab(this,'media')">媒体</div>
         <div class="tab-item" onclick="switchTagTab(this,'custom')">自定义</div>
       </div>
 
@@ -761,46 +777,6 @@ tbody tr:hover { background: #f8fafc; }
             </div>
           </div>
 
-          <!-- 媒体维度树 -->
-          <div id="tag-tree-media" style="display:none;">
-            <div class="tree-item" onclick="toggleTree(this)">
-              <span class="arrow expanded">▶</span>
-              <span style="font-weight:500;">信息流平台</span>
-              <span class="tree-badge">5</span>
-            </div>
-            <div class="tree-children">
-              <div class="tree-item" onclick="toggleTree(this)"><span class="arrow">▶</span><span>巨量引擎</span><span class="tree-badge">3</span></div>
-              <div class="tree-children" style="display:none;">
-                <div class="tree-item"><span class="arrow"></span>抖音</div>
-                <div class="tree-item"><span class="arrow"></span>今日头条</div>
-                <div class="tree-item"><span class="arrow"></span>西瓜视频</div>
-              </div>
-              <div class="tree-item"><span class="arrow"></span>腾讯广告</div>
-              <div class="tree-item"><span class="arrow"></span>百度信息流</div>
-            </div>
-            <div class="tree-item" onclick="toggleTree(this)">
-              <span class="arrow">▶</span>
-              <span style="font-weight:500;">短视频平台</span>
-              <span class="tree-badge">4</span>
-            </div>
-            <div class="tree-children" style="display:none;">
-              <div class="tree-item"><span class="arrow"></span>快手</div>
-              <div class="tree-item"><span class="arrow"></span>视频号</div>
-              <div class="tree-item"><span class="arrow"></span>B站</div>
-              <div class="tree-item"><span class="arrow"></span>小红书</div>
-            </div>
-            <div class="tree-item" onclick="toggleTree(this)">
-              <span class="arrow">▶</span>
-              <span style="font-weight:500;">应用商店</span>
-              <span class="tree-badge">3</span>
-            </div>
-            <div class="tree-children" style="display:none;">
-              <div class="tree-item"><span class="arrow"></span>OPPO 商店</div>
-              <div class="tree-item"><span class="arrow"></span>vivo 商店</div>
-              <div class="tree-item"><span class="arrow"></span>华为应用市场</div>
-            </div>
-          </div>
-
           <!-- 自定义维度树 -->
           <div id="tag-tree-custom" style="display:none;">
             <div style="padding:8px 12px; margin-bottom:8px; background:#f5f3ff; border-radius:8px; font-size:12px; color:#7c3aed;">
@@ -830,7 +806,7 @@ tbody tr:hover { background: #f8fafc; }
               <span style="font-weight:500;">重点扶持</span>
               <span class="tree-badge">1</span>
             </div>
-            <div class="tree-item" style="color:#7c3aed; cursor:pointer;">
+            <div class="tree-item" style="color:#7c3aed; cursor:pointer;" onclick="showModal('tag-add-modal')">
               <span class="arrow"></span>+ 新增自定义分类
             </div>
           </div>
@@ -839,10 +815,10 @@ tbody tr:hover { background: #f8fafc; }
         <!-- 右侧标签详情 -->
         <div class="card-section">
           <div class="section-title">
-            <span>都市 > 霸总 <span style="font-size:12px; color:#94a3b8; font-weight:400;">— 共 5 个子标签</span></span>
+            <span><span id="tag-detail-title">都市 &gt; 霸总</span> <span id="tag-detail-sub" style="font-size:12px; color:#94a3b8; font-weight:400;">— 共 5 个子标签</span></span>
             <div style="display:flex; gap:6px;">
-              <button class="btn btn-outline" style="font-size:12px;">编辑分类</button>
-              <button class="btn btn-primary" style="font-size:12px;">+ 添加子标签</button>
+              <button id="tag-detail-edit-btn" class="btn btn-outline" style="font-size:12px;" onclick="openTagEdit('霸总','2','分类')">编辑分类</button>
+              <button id="tag-detail-add-btn" class="btn btn-primary" style="font-size:12px;" onclick="openTagSubAdd('都市 > 霸总')">+ 添加子标签</button>
             </div>
           </div>
           
@@ -857,14 +833,14 @@ tbody tr:hover { background: #f8fafc; }
                 <th>操作</th>
               </tr>
             </thead>
-            <tbody>
+            <tbody id="tag-detail-tbody">
               <tr>
                 <td style="font-weight:500;">霸总归来</td>
                 <td><span style="font-size:12px; color:#94a3b8;">第3层</span></td>
                 <td><span class="pill pill-manual">人工</span></td>
                 <td>8</td>
                 <td style="color:#94a3b8;">2024-05-12</td>
-                <td><button class="btn btn-outline" style="padding:3px 8px; font-size:11px;">编辑</button> <button class="btn btn-outline" style="padding:3px 8px; font-size:11px; color:#ef4444; border-color:#fecaca;">删除</button></td>
+                <td><button class="btn btn-outline" style="padding:3px 8px; font-size:11px;" onclick="openTagEdit('霸总归来','3','具体标签')">编辑</button> <button class="btn btn-outline" style="padding:3px 8px; font-size:11px; color:#ef4444; border-color:#fecaca;">删除</button></td>
               </tr>
               <tr>
                 <td style="font-weight:500;">总裁独宠</td>
@@ -872,7 +848,7 @@ tbody tr:hover { background: #f8fafc; }
                 <td><span class="pill pill-manual">人工</span></td>
                 <td>12</td>
                 <td style="color:#94a3b8;">2024-05-10</td>
-                <td><button class="btn btn-outline" style="padding:3px 8px; font-size:11px;">编辑</button> <button class="btn btn-outline" style="padding:3px 8px; font-size:11px; color:#ef4444; border-color:#fecaca;">删除</button></td>
+                <td><button class="btn btn-outline" style="padding:3px 8px; font-size:11px;" onclick="openTagEdit('总裁独宠','3','具体标签')">编辑</button> <button class="btn btn-outline" style="padding:3px 8px; font-size:11px; color:#ef4444; border-color:#fecaca;">删除</button></td>
               </tr>
               <tr>
                 <td style="font-weight:500;">商战逆袭</td>
@@ -880,7 +856,7 @@ tbody tr:hover { background: #f8fafc; }
                 <td><span class="pill pill-ai">AI</span></td>
                 <td>5</td>
                 <td style="color:#94a3b8;">2024-06-01</td>
-                <td><button class="btn btn-outline" style="padding:3px 8px; font-size:11px;">编辑</button> <button class="btn btn-outline" style="padding:3px 8px; font-size:11px; color:#ef4444; border-color:#fecaca;">删除</button></td>
+                <td><button class="btn btn-outline" style="padding:3px 8px; font-size:11px;" onclick="openTagEdit('商战逆袭','3','具体标签')">编辑</button> <button class="btn btn-outline" style="padding:3px 8px; font-size:11px; color:#ef4444; border-color:#fecaca;">删除</button></td>
               </tr>
               <tr>
                 <td style="font-weight:500;">豪门恩怨</td>
@@ -888,7 +864,7 @@ tbody tr:hover { background: #f8fafc; }
                 <td><span class="pill pill-ai">AI</span></td>
                 <td>6</td>
                 <td style="color:#94a3b8;">2024-06-08</td>
-                <td><button class="btn btn-outline" style="padding:3px 8px; font-size:11px;">编辑</button> <button class="btn btn-outline" style="padding:3px 8px; font-size:11px; color:#ef4444; border-color:#fecaca;">删除</button></td>
+                <td><button class="btn btn-outline" style="padding:3px 8px; font-size:11px;" onclick="openTagEdit('豪门恩怨','3','具体标签')">编辑</button> <button class="btn btn-outline" style="padding:3px 8px; font-size:11px; color:#ef4444; border-color:#fecaca;">删除</button></td>
               </tr>
               <tr>
                 <td style="font-weight:500;">都市之王</td>
@@ -896,7 +872,7 @@ tbody tr:hover { background: #f8fafc; }
                 <td><span class="pill pill-manual">人工</span></td>
                 <td>3</td>
                 <td style="color:#94a3b8;">2024-06-20</td>
-                <td><button class="btn btn-outline" style="padding:3px 8px; font-size:11px;">编辑</button> <button class="btn btn-outline" style="padding:3px 8px; font-size:11px; color:#ef4444; border-color:#fecaca;">删除</button></td>
+                <td><button class="btn btn-outline" style="padding:3px 8px; font-size:11px;" onclick="openTagEdit('都市之王','3','具体标签')">编辑</button> <button class="btn btn-outline" style="padding:3px 8px; font-size:11px; color:#ef4444; border-color:#fecaca;">删除</button></td>
               </tr>
             </tbody>
           </table>
@@ -905,9 +881,10 @@ tbody tr:hover { background: #f8fafc; }
           <div style="margin-top:20px; padding:14px 16px; background:#f8fafc; border-radius:8px; border:1px solid #e2e8f0;">
             <div style="font-size:12px; font-weight:500; color:#64748b; margin-bottom:8px;">层级结构说明</div>
             <div style="font-size:12px; color:#94a3b8; line-height:1.8;">
-              第1层（维度）：题材、场景、年代、受众频道、特定人群、媒体、自定义<br>
-              第2层（分类）：如 都市、玄幻、古言；或 年龄段、消费偏好、地域<br>
-              第3层（具体标签）：如 霸总归来、修仙觉醒、25-34岁
+              第1层（维度）：题材、场景、年代、受众频道、特定人群、自定义；「新增标签」中选择<strong style="color:#7c3aed;">+ 新建维度</strong>可创建全新维度<br>
+              第2层（分类）：如 都市、玄幻、古言；或 年龄段、消费偏好、地域。新增标签时<strong style="color:#7c3aed;">不选父级分类</strong>，即在维度下创建第一层分类<br>
+              第3层（具体标签）：如 霸总归来、修仙觉醒、25-34岁<br>
+              每一层分类 / 标签均支持编辑（悬停节点点击 ✎ 图标，或右侧列表「编辑」按钮）
             </div>
           </div>
         </div>
@@ -3124,20 +3101,7 @@ tbody tr:hover { background: #f8fafc; }
       </div>
       <div>
         <label style="font-size:12px; color:#64748b; display:block; margin-bottom:4px;">标签选择</label>
-        <div style="display:flex; gap:8px; flex-wrap:wrap;">
-          <select style="font-size:12px; border:1px solid #e2e8f0; border-radius:6px; padding:6px 10px; color:#334155;">
-            <option>选择题材</option><option>都市</option><option>玄幻</option><option>古言</option><option>悬疑</option><option>甜宠</option>
-          </select>
-          <select style="font-size:12px; border:1px solid #e2e8f0; border-radius:6px; padding:6px 10px; color:#334155;">
-            <option>选择场景</option><option>对话</option><option>独白</option><option>动作</option><option>情绪爆发</option>
-          </select>
-          <select style="font-size:12px; border:1px solid #e2e8f0; border-radius:6px; padding:6px 10px; color:#334155;">
-            <option>选择频道</option><option>男频</option><option>女频</option><option>通用</option>
-          </select>
-        </div>
-        <div style="margin-top:8px;">
-          <input class="search-input" style="width:100%;" placeholder="搜索并添加更多标签（支持多选）...">
-        </div>
+        <div id="seed-add-cascader"></div>
       </div>
       <div>
         <label style="font-size:12px; color:#64748b; display:block; margin-bottom:4px;">来源</label>
@@ -3146,10 +3110,61 @@ tbody tr:hover { background: #f8fafc; }
           <label style="font-size:13px; color:#334155; display:flex; align-items:center; gap:4px;"><input type="radio" name="source"> 外部录入</label>
         </div>
       </div>
+      <div>
+        <label style="font-size:12px; color:#64748b; display:block; margin-bottom:4px;">备注信息</label>
+        <textarea id="seed-add-remark" class="search-input" style="width:100%; min-height:64px; resize:vertical;" placeholder="填写素材的补充说明，如跑量表现、适用题材、注意事项等..."></textarea>
+      </div>
     </div>
     <div style="display:flex; justify-content:flex-end; gap:8px; margin-top:20px;">
       <button class="btn btn-outline" onclick="hideModal('seed-add-modal')">取消</button>
       <button class="btn btn-primary">确认新增</button>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== 弹窗：编辑种子前贴 ==================== -->
+<div class="modal-overlay" id="seed-edit-modal">
+  <div class="modal-card">
+    <h3>编辑种子前贴</h3>
+    <div style="display:flex; flex-direction:column; gap:14px;">
+      <div>
+        <label style="font-size:12px; color:#64748b; display:block; margin-bottom:4px;">素材名称</label>
+        <input id="seed-edit-name" class="search-input" style="width:100%;" placeholder="输入前贴名称...">
+      </div>
+      <div>
+        <label style="font-size:12px; color:#64748b; display:block; margin-bottom:4px;">标签选择（Cascader 级联选择器，维度与标签管理一致）</label>
+        <div id="seed-edit-cascader"></div>
+      </div>
+      <div style="display:flex; gap:12px;">
+        <div style="flex:1;">
+          <label style="font-size:12px; color:#64748b; display:block; margin-bottom:4px;">操作人</label>
+          <select id="seed-edit-operator" class="filter-select" style="width:100%;">
+            <option>张伟</option>
+            <option>李娜</option>
+            <option>王强</option>
+            <option>陈静</option>
+          </select>
+        </div>
+        <div style="flex:1;">
+          <label style="font-size:12px; color:#64748b; display:block; margin-bottom:4px;">状态</label>
+          <select id="seed-edit-status" class="filter-select" style="width:100%;">
+            <option>启用</option>
+            <option>暂停</option>
+            <option>归档</option>
+          </select>
+        </div>
+      </div>
+      <div>
+        <label style="font-size:12px; color:#64748b; display:block; margin-bottom:4px;">来源</label>
+        <div style="display:flex; gap:8px;">
+          <label style="font-size:13px; color:#334155; display:flex; align-items:center; gap:4px;"><input type="radio" name="source-edit" checked> 自制</label>
+          <label style="font-size:13px; color:#334155; display:flex; align-items:center; gap:4px;"><input type="radio" name="source-edit"> 外部录入</label>
+        </div>
+      </div>
+    </div>
+    <div style="display:flex; justify-content:flex-end; gap:8px; margin-top:20px;">
+      <button class="btn btn-outline" onclick="hideModal('seed-edit-modal')">取消</button>
+      <button class="btn btn-primary" onclick="hideModal('seed-edit-modal')">保存修改</button>
     </div>
   </div>
 </div>
@@ -3161,20 +3176,27 @@ tbody tr:hover { background: #f8fafc; }
     <div style="display:flex; flex-direction:column; gap:14px;">
       <div>
         <label style="font-size:12px; color:#64748b; display:block; margin-bottom:4px;">所属维度</label>
-        <select style="font-size:13px; border:1px solid #e2e8f0; border-radius:6px; padding:8px 12px; color:#334155; width:100%;">
-          <option>题材</option><option>场景</option><option>年代</option><option>受众频道</option><option>特定人群</option><option>媒体</option><option>自定义</option>
+        <select id="tag-add-dim" onchange="onTagDimChange(this)" style="font-size:13px; border:1px solid #e2e8f0; border-radius:6px; padding:8px 12px; color:#334155; width:100%;">
+          <option>题材</option><option>场景</option><option>年代</option><option>受众频道</option><option>特定人群</option><option>自定义</option>
+          <option value="__new__" style="color:#7c3aed;">+ 新建维度…</option>
         </select>
       </div>
+      <div id="tag-add-newdim" style="display:none;">
+        <label style="font-size:12px; color:#64748b; display:block; margin-bottom:4px;">新维度名称</label>
+        <input id="tag-add-newdim-input" class="search-input" style="width:100%;" placeholder="如：情绪基调、投放渠道…">
+        <div style="font-size:11px; color:#94a3b8; margin-top:4px;">新建维度将作为第 1 层，创建后可在其下继续添加分类与子标签。</div>
+      </div>
       <div>
-        <label style="font-size:12px; color:#64748b; display:block; margin-bottom:4px;">父级分类（可选，留空则创建第2层分类）</label>
-        <select style="font-size:13px; border:1px solid #e2e8f0; border-radius:6px; padding:8px 12px; color:#334155; width:100%;">
-          <option>— 无（新建第2层分类）—</option>
+        <label style="font-size:12px; color:#64748b; display:block; margin-bottom:4px;">父级分类<span style="color:#94a3b8;">（不选则在该维度下创建<strong style="color:#7c3aed;">第一层分类</strong>）</span></label>
+        <select id="tag-add-parent" style="font-size:13px; border:1px solid #e2e8f0; border-radius:6px; padding:8px 12px; color:#334155; width:100%;">
+          <option value="">— 不选（创建第一层分类）—</option>
           <option>都市</option><option>玄幻</option><option>古言</option><option>悬疑</option><option>甜宠</option>
+          <option>都市 &gt; 霸总</option><option>都市 &gt; 复仇</option><option>玄幻 &gt; 修仙</option>
         </select>
       </div>
       <div>
-        <label style="font-size:12px; color:#64748b; display:block; margin-bottom:4px;">标签名称</label>
-        <input class="search-input" style="width:100%;" placeholder="输入标签名称...">
+        <label style="font-size:12px; color:#64748b; display:block; margin-bottom:4px;">标签 / 分类名称</label>
+        <input id="tag-add-name" class="search-input" style="width:100%;" placeholder="输入名称...">
       </div>
       <div>
         <label style="font-size:12px; color:#64748b; display:block; margin-bottom:6px;">打标方式</label>
@@ -3199,21 +3221,166 @@ tbody tr:hover { background: #f8fafc; }
   </div>
 </div>
 
+<!-- ==================== 弹窗：添加子标签 ==================== -->
+<div class="modal-overlay" id="tag-sub-add-modal">
+  <div class="modal-card">
+    <h3>添加子标签</h3>
+    <div style="display:flex; flex-direction:column; gap:14px;">
+      <div>
+        <label style="font-size:12px; color:#64748b; display:block; margin-bottom:4px;">上级分类</label>
+        <div style="display:flex; align-items:center; gap:8px; padding:8px 12px; background:#f5f3ff; border:1px solid #ede9fe; border-radius:8px;">
+          <span class="pill" style="background:#ede9fe; color:#6d28d9; font-size:11px;">当前分类</span>
+          <span id="tag-sub-parent-path" style="font-size:13px; color:#6d28d9; font-weight:500;">都市 &gt; 霸总</span>
+          <span style="font-size:11px; color:#94a3b8; margin-left:auto;">子标签将创建于第 3 层</span>
+        </div>
+      </div>
+      <div>
+        <label style="font-size:12px; color:#64748b; display:block; margin-bottom:4px;">子标签名称<span style="color:#94a3b8;">（支持批量，多个用换行或逗号分隔）</span></label>
+        <textarea id="tag-sub-names" style="width:100%; border:1px solid #e2e8f0; border-radius:8px; padding:8px 12px; font-size:13px; resize:vertical; min-height:70px; outline:none;" placeholder="如：&#10;霸道总裁&#10;隐婚总裁&#10;豪门宠妻"></textarea>
+      </div>
+      <div>
+        <label style="font-size:12px; color:#64748b; display:block; margin-bottom:6px;">打标方式</label>
+        <div style="display:flex; gap:8px;">
+          <label style="flex:1; border:1px solid #c4b5fd; background:#ede9fe; border-radius:8px; padding:8px 12px; font-size:13px; color:#6d28d9; display:flex; align-items:center; gap:6px; cursor:pointer;">
+            <input type="radio" name="tag-sub-mode" checked> 人工打标
+          </label>
+          <label style="flex:1; border:1px solid #e2e8f0; border-radius:8px; padding:8px 12px; font-size:13px; color:#334155; display:flex; align-items:center; gap:6px; cursor:pointer;">
+            <input type="radio" name="tag-sub-mode"> AI 打标
+          </label>
+        </div>
+      </div>
+      <div>
+        <label style="font-size:12px; color:#64748b; display:block; margin-bottom:4px;">备注（可选）</label>
+        <input class="search-input" style="width:100%;" placeholder="子标签的适用说明...">
+      </div>
+    </div>
+    <div style="display:flex; justify-content:flex-end; gap:8px; margin-top:20px;">
+      <button class="btn btn-outline" onclick="hideModal('tag-sub-add-modal')">取消</button>
+      <button class="btn btn-primary">确认添加</button>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== 弹窗：编辑标签 / 分类 ==================== -->
+<div class="modal-overlay" id="tag-edit-modal">
+  <div class="modal-card">
+    <h3>编辑标签 / 分类</h3>
+    <div style="display:flex; flex-direction:column; gap:14px;">
+      <div>
+        <label style="font-size:12px; color:#64748b; display:block; margin-bottom:4px;">当前层级</label>
+        <div style="display:flex; align-items:center; gap:8px;">
+          <span id="tag-edit-level" class="pill" style="background:#ede9fe; color:#6d28d9; font-size:11px;">第 2 层 · 分类</span>
+          <span style="font-size:12px; color:#94a3b8;">支持修改名称、调整父级、切换打标方式</span>
+        </div>
+      </div>
+      <div>
+        <label style="font-size:12px; color:#64748b; display:block; margin-bottom:4px;">名称</label>
+        <input id="tag-edit-name" class="search-input" style="width:100%;" value="">
+      </div>
+      <div>
+        <label style="font-size:12px; color:#64748b; display:block; margin-bottom:4px;">父级分类<span style="color:#94a3b8;">（移动到其他分类下，留空则升为第一层）</span></label>
+        <select id="tag-edit-parent" style="font-size:13px; border:1px solid #e2e8f0; border-radius:6px; padding:8px 12px; color:#334155; width:100%;">
+          <option value="">— 不选（第一层分类）—</option>
+          <option>都市</option><option>玄幻</option><option>古言</option><option>悬疑</option><option>甜宠</option>
+          <option>都市 &gt; 霸总</option><option>都市 &gt; 复仇</option><option>玄幻 &gt; 修仙</option>
+        </select>
+      </div>
+      <div>
+        <label style="font-size:12px; color:#64748b; display:block; margin-bottom:6px;">打标方式</label>
+        <div style="display:flex; gap:8px;">
+          <label style="flex:1; border:1px solid #c4b5fd; background:#ede9fe; border-radius:8px; padding:8px 12px; font-size:13px; color:#6d28d9; display:flex; align-items:center; gap:6px; cursor:pointer;">
+            <input type="radio" name="tag-edit-mode" checked> 人工打标
+          </label>
+          <label style="flex:1; border:1px solid #e2e8f0; border-radius:8px; padding:8px 12px; font-size:13px; color:#334155; display:flex; align-items:center; gap:6px; cursor:pointer;">
+            <input type="radio" name="tag-edit-mode"> AI 打标
+          </label>
+        </div>
+      </div>
+      <div>
+        <label style="font-size:12px; color:#64748b; display:block; margin-bottom:4px;">描述（可选）</label>
+        <textarea style="width:100%; border:1px solid #e2e8f0; border-radius:8px; padding:8px 12px; font-size:13px; resize:vertical; min-height:60px; outline:none;" placeholder="标签的使用说明..."></textarea>
+      </div>
+    </div>
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-top:20px;">
+      <button class="btn btn-outline" style="color:#ef4444; border-color:#fecaca;">删除该项</button>
+      <div style="display:flex; gap:8px;">
+        <button class="btn btn-outline" onclick="hideModal('tag-edit-modal')">取消</button>
+        <button class="btn btn-primary">保存修改</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <!-- ==================== 弹窗：批量导入 ==================== -->
 <div class="modal-overlay" id="import-modal">
-  <div class="modal-card">
+  <div class="modal-card" style="width:680px;">
     <h3>批量导入种子前贴</h3>
-    <div style="border:2px dashed #e2e8f0; border-radius:8px; padding:40px; text-align:center; color:#94a3b8; font-size:13px; cursor:pointer;">
-      点击或拖拽上传文件<br>
-      <span style="font-size:11px;">支持 .zip 压缩包（内含视频+标签CSV）</span><br>
-      <a style="font-size:11px; color:#7c3aed; text-decoration:underline; margin-top:8px; display:inline-block;">下载导入模板</a>
+
+    <!-- 批量视频文件上传 -->
+    <div id="import-mode-video">
+      <div style="border:2px dashed #e2e8f0; border-radius:8px; padding:32px; text-align:center; color:#94a3b8; font-size:13px; cursor:pointer;">
+        点击或拖拽批量上传视频文件<br>
+        <span style="font-size:11px;">支持 mp4/mov，可多选，单个最大 500MB</span>
+      </div>
+      <div style="margin-top:10px; font-size:12px; color:#64748b;">已选视频：<span style="color:#334155; font-weight:500;">3</span> 个（示例：霸总归来_A.mp4、仙门弃徒_B.mp4、千金复仇_C.mp4）</div>
+
+      <div style="margin-top:16px;">
+        <label style="font-size:12px; color:#64748b; display:block; margin-bottom:6px;">标签与备注配置方式</label>
+        <div style="display:flex; gap:8px;">
+          <span class="filter-pill active" id="imp-mode-unified" onclick="switchImportTagMode('unified')">统一配置</span>
+          <span class="filter-pill" id="imp-mode-one2one" onclick="switchImportTagMode('one2one')">一对一配置</span>
+          <span class="filter-pill" id="imp-mode-ai" onclick="switchImportTagMode('ai')">AI 自动打标</span>
+        </div>
+      </div>
+
+      <!-- 配置：统一配置 -->
+      <div id="imp-cfg-unified" style="margin-top:14px;">
+        <div style="padding:12px 14px; background:#f8fafc; border-radius:6px;">
+          <div style="font-size:12px; color:#64748b; margin-bottom:8px;">为全部视频统一设置标签与备注</div>
+          <div id="imp-unified-cascader"></div>
+          <textarea class="search-input" style="width:100%; min-height:56px; resize:vertical; margin-top:10px;" placeholder="统一备注信息（应用于全部视频）..."></textarea>
+        </div>
+      </div>
+
+      <!-- 配置：一对一配置 -->
+      <div id="imp-cfg-one2one" style="margin-top:14px; display:none;">
+        <div style="border:1px solid #f1f5f9; border-radius:6px; overflow:visible;">
+          <table style="font-size:12px;">
+            <thead>
+              <tr><th>视频文件</th><th>标签</th><th>备注信息</th></tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td style="font-weight:500;">霸总归来_A.mp4</td>
+                <td><div id="imp-o2o-cascader-1"></div></td>
+                <td><input class="search-input" style="width:100%; font-size:12px; padding:4px 8px;" placeholder="备注…"></td>
+              </tr>
+              <tr>
+                <td style="font-weight:500;">仙门弃徒_B.mp4</td>
+                <td><div id="imp-o2o-cascader-2"></div></td>
+                <td><input class="search-input" style="width:100%; font-size:12px; padding:4px 8px;" placeholder="备注…"></td>
+              </tr>
+              <tr>
+                <td style="font-weight:500;">千金复仇_C.mp4</td>
+                <td><div id="imp-o2o-cascader-3"></div></td>
+                <td><input class="search-input" style="width:100%; font-size:12px; padding:4px 8px;" placeholder="备注…"></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <div style="font-size:12px; color:#94a3b8; margin-top:6px;">为每个视频单独配置标签与备注信息</div>
+      </div>
+
+      <!-- 配置：AI自动打标 -->
+      <div id="imp-cfg-ai" style="margin-top:14px; display:none;">
+        <div style="padding:14px; background:#ede9fe; border-radius:6px; font-size:12px; color:#6d28d9; line-height:1.7;">
+          由 AI 模型自动识别每个视频的画面、台词与节奏，自动生成 题材/场景/年代/受众频道/特定人群 等标签，并输出内容摘要作为备注信息。<br>
+          <label style="display:flex; align-items:center; gap:6px; margin-top:8px; color:#334155;"><input type="checkbox" checked> 打标后进入待人工复核队列</label>
+          <label style="display:flex; align-items:center; gap:6px; margin-top:4px; color:#334155;"><input type="checkbox"> 自动生成备注摘要</label>
+        </div>
+      </div>
     </div>
-    <div style="margin-top:14px; padding:10px 14px; background:#f8fafc; border-radius:6px; font-size:12px; color:#64748b; line-height:1.6;">
-      导入说明：<br>
-      · 压缩包内需包含视频文件 + tags.csv 标签映射表<br>
-      · CSV格式：文件名, 名称, 题材, 场景, 频道, 人群标签(多个用|分隔)<br>
-      · 重复文件将跳过，同名素材自动追加序号
-    </div>
+
     <div style="display:flex; justify-content:flex-end; gap:8px; margin-top:20px;">
       <button class="btn btn-outline" onclick="hideModal('import-modal')">取消</button>
       <button class="btn btn-primary">开始导入</button>
@@ -3587,6 +3754,269 @@ function switchTagTab(el, dim) {
   });
 }
 
+// 新增标签：所属维度切换（选择"新建维度"时显示输入框，并禁用父级）
+function onTagDimChange(sel) {
+  var isNew = sel.value === '__new__';
+  var newBlock = document.getElementById('tag-add-newdim');
+  var parent = document.getElementById('tag-add-parent');
+  if (newBlock) newBlock.style.display = isNew ? 'block' : 'none';
+  if (parent) {
+    parent.disabled = isNew;
+    parent.style.opacity = isNew ? '.5' : '1';
+    if (isNew) parent.value = '';
+  }
+}
+
+// 种子前贴新增弹窗：标签三级联动数据（维度 → 分类 → 具体标签），与标签管理一致
+var SEED_TAG_TREE = {
+  '题材': {
+    '都市': ['霸总归来', '总裁独宠', '商战逆袭', '都市异能'],
+    '玄幻': ['修仙觉醒', '废柴逆袭', '丹帝归来', '神魔大陆'],
+    '古言': ['宫斗', '和亲', '将门虎女'],
+    '悬疑': ['探案', '末世求生', '心理博弈'],
+    '甜宠': ['校园初恋', '闪婚甜宠', '双向奔赴']
+  },
+  '场景': {
+    '都市职场': ['写字楼', '谈判桌', '天台对峙'],
+    '豪门宅邸': ['客厅对峙', '书房密谈'],
+    '古风宫廷': ['金殿', '后宫', '御花园'],
+    '校园': ['教室', '操场', '毕业季']
+  },
+  '年代': {
+    '现代': ['当下都市', '近未来'],
+    '古代': ['架空王朝', '历史正剧'],
+    '民国': ['旧上海', '战乱年代'],
+    '未来': ['星际', '赛博都市']
+  },
+  '受众频道': {
+    '女频': ['女性成长', '情感虐恋', '甜宠爽剧'],
+    '男频': ['热血逆袭', '战神归来', '赘婿翻身']
+  },
+  '特定人群': {
+    '年龄段': ['18-24岁', '25-34岁', '35岁以上'],
+    '消费偏好': ['高付费意愿', '价格敏感'],
+    '地域': ['一二线城市', '下沉市场']
+  },
+  '自定义': {
+    '爆款元素': ['打脸', '反转', '追妻火葬场'],
+    '节日专题': ['春节档', '暑期档', '双十一大促']
+  }
+};
+
+// 单条下载
+function downloadSeed(btn) {
+  var row = btn.closest('tr');
+  var name = row ? row.querySelector('td:nth-child(3)').textContent.trim() : '素材';
+  alert('开始下载素材：' + name + '（原始视频 + 标签信息）');
+}
+
+// 批量下载
+function batchDownloadSeeds() {
+  alert('已发起批量下载，系统将打包所选素材为 zip 文件供下载。');
+}
+
+// 批量发起裂变：跳转到裂变工作台
+function batchFission() {
+  switchModule('fission');
+}
+
+// 批量视频上传：标签与备注配置方式切换（统一 / 一对一 / AI）
+function switchImportTagMode(mode) {
+  ['unified','one2one','ai'].forEach(function(m){
+    var cfg = document.getElementById('imp-cfg-' + m);
+    if (cfg) cfg.style.display = (m === mode) ? 'block' : 'none';
+    var pill = document.getElementById('imp-mode-' + m);
+    if (pill) pill.classList.toggle('active', m === mode);
+  });
+}
+
+// 打开"编辑种子前贴"弹窗
+function openSeedEdit(name, operator) {
+  var nameInput = document.getElementById('seed-edit-name');
+  var opSel = document.getElementById('seed-edit-operator');
+  if (nameInput) nameInput.value = name || '';
+  if (opSel && operator) {
+    Array.prototype.slice.call(opSel.options).forEach(function(o){
+      if (o.value === operator || o.textContent === operator) opSel.value = o.value;
+    });
+  }
+  showModal('seed-edit-modal');
+}
+
+// 打开"添加子标签"弹窗
+function openTagSubAdd(parentPath) {
+  var el = document.getElementById('tag-sub-parent-path');
+  if (el) el.textContent = parentPath || '当前分类';
+  showModal('tag-sub-add-modal');
+}
+
+// 打开"编辑标签/分类"弹窗（任意层级均可编辑）
+function openTagEdit(name, level, kind) {
+  var nameInput = document.getElementById('tag-edit-name');
+  var levelPill = document.getElementById('tag-edit-level');
+  if (nameInput) nameInput.value = name || '';
+  if (levelPill) levelPill.textContent = '第 ' + (level || '1') + ' 层 · ' + (kind || '维度');
+  showModal('tag-edit-modal');
+}
+
+// 为所有维度树的每一层节点注入"编辑"图标
+function injectTreeEditIcons() {
+  var trees = document.querySelectorAll('[id^="tag-tree-"]');
+  trees.forEach(function(tree){
+    tree.querySelectorAll('.tree-item').forEach(function(item){
+      // 跳过"+ 新增"类占位项
+      if (item.textContent.indexOf('+ 新增') !== -1) return;
+      if (item.querySelector('.tree-edit')) return;
+      // 推断层级：所在 .tree-children 的嵌套深度 => 层级
+      var depth = 1;
+      var p = item.parentElement;
+      while (p && p !== tree) {
+        if (p.classList && p.classList.contains('tree-children')) depth++;
+        p = p.parentElement;
+      }
+      var kind = depth === 1 ? '分类' : (depth === 2 ? '子分类' : '具体标签');
+      // 取节点自身文本（排除 badge / arrow / 已有图标）
+      var label = '';
+      item.childNodes.forEach(function(n){
+        if (n.nodeType === 3) label += n.textContent;
+        else if (n.nodeType === 1 && !n.classList.contains('arrow') && !n.classList.contains('tree-badge') && !n.classList.contains('tree-edit')) label += n.textContent;
+      });
+      label = label.trim();
+      var edit = document.createElement('span');
+      edit.className = 'tree-edit';
+      edit.textContent = '✎';
+      edit.title = '编辑';
+      // 若无 badge，图标需自行靠右
+      if (!item.querySelector('.tree-badge')) edit.style.marginLeft = 'auto';
+      else edit.style.marginLeft = '6px';
+      edit.addEventListener('click', function(e){
+        e.stopPropagation();
+        openTagEdit(label, String(depth), kind);
+      });
+      item.appendChild(edit);
+      // 记录节点信息，供右侧联动使用
+      item.setAttribute('data-label', label);
+      item.setAttribute('data-depth', String(depth));
+      item.setAttribute('data-kind', kind);
+      // 点击节点 => 右侧列表联动
+      item.addEventListener('click', function(e){
+        // 点击箭头（展开/收起）或编辑图标时不触发选中
+        if (e.target.classList && (e.target.classList.contains('arrow') || e.target.classList.contains('tree-edit'))) return;
+        selectTreeNode(item);
+      });
+    });
+  });
+}
+
+// 计算某个树节点的面包屑路径（从顶层到当前节点）
+function getTreeNodePath(item) {
+  var parts = [];
+  var cur = item;
+  while (cur && cur.classList && cur.classList.contains('tree-item')) {
+    var lbl = cur.getAttribute('data-label');
+    if (!lbl) {
+      lbl = '';
+      cur.childNodes.forEach(function(n){
+        if (n.nodeType === 3) lbl += n.textContent;
+        else if (n.nodeType === 1 && !n.classList.contains('arrow') && !n.classList.contains('tree-badge') && !n.classList.contains('tree-edit')) lbl += n.textContent;
+      });
+      lbl = lbl.trim();
+    }
+    parts.unshift(lbl);
+    // 向上寻找父级 tree-item：先找所在的 .tree-children，再取其前一个兄弟节点
+    var container = cur.parentElement;
+    while (container && !(container.classList && container.classList.contains('tree-children'))) {
+      container = container.parentElement;
+    }
+    if (!container) break;
+    var prev = container.previousElementSibling;
+    cur = (prev && prev.classList && prev.classList.contains('tree-item')) ? prev : null;
+  }
+  return parts;
+}
+
+// 点击左侧树节点 => 右侧详情联动
+function selectTreeNode(item) {
+  // 高亮当前节点，清除其它节点选中态
+  document.querySelectorAll('.tree-item.tree-active').forEach(function(n){ n.classList.remove('tree-active'); });
+  item.classList.add('tree-active');
+
+  var label = item.getAttribute('data-label') || '';
+  var depth = parseInt(item.getAttribute('data-depth') || '1', 10);
+  var kind = item.getAttribute('data-kind') || '分类';
+  var path = getTreeNodePath(item);
+  var breadcrumb = path.join(' > ');
+
+  // 直接子节点（下一层）
+  var container = item.nextElementSibling;
+  var children = [];
+  if (container && container.classList && container.classList.contains('tree-children')) {
+    // 仅取直接子级 tree-item
+    Array.prototype.slice.call(container.children).forEach(function(c){
+      if (c.classList && c.classList.contains('tree-item')) {
+        var cl = c.getAttribute('data-label');
+        if (!cl) {
+          cl = '';
+          c.childNodes.forEach(function(n){
+            if (n.nodeType === 3) cl += n.textContent;
+            else if (n.nodeType === 1 && !n.classList.contains('arrow') && !n.classList.contains('tree-badge') && !n.classList.contains('tree-edit')) cl += n.textContent;
+          });
+          cl = cl.trim();
+        }
+        children.push(cl);
+      }
+    });
+  }
+
+  // 更新标题面包屑
+  var titleEl = document.getElementById('tag-detail-title');
+  if (titleEl) titleEl.textContent = breadcrumb || label;
+  var subEl = document.getElementById('tag-detail-sub');
+  if (subEl) {
+    subEl.textContent = children.length ? ('— 共 ' + children.length + ' 个子标签') : ('— ' + kind + '，暂无子标签');
+  }
+
+  // 重新绑定"编辑"与"添加子标签"按钮上下文
+  var editBtn = document.getElementById('tag-detail-edit-btn');
+  if (editBtn) {
+    editBtn.textContent = (kind === '具体标签') ? '编辑标签' : '编辑分类';
+    editBtn.onclick = function(){ openTagEdit(label, String(depth), kind); };
+  }
+  var addBtn = document.getElementById('tag-detail-add-btn');
+  if (addBtn) {
+    addBtn.onclick = function(){ openTagSubAdd(breadcrumb || label); };
+  }
+
+  // 渲染子标签列表
+  var tbody = document.getElementById('tag-detail-tbody');
+  if (tbody) {
+    if (children.length) {
+      var rows = children.map(function(cn, i){
+        var childDepth = depth + 1;
+        var childKind = childDepth === 1 ? '分类' : (childDepth === 2 ? '子分类' : '具体标签');
+        var mark = (i % 2 === 0)
+          ? '<span class="pill pill-manual">人工</span>'
+          : '<span class="pill pill-ai">AI</span>';
+        var seedCnt = 12 + ((i * 7) % 40);
+        return '<tr>' +
+          '<td style="font-weight:500; color:#1e293b;">' + cn + '</td>' +
+          '<td><span style="font-size:12px; color:#94a3b8;">第' + childDepth + '层 · ' + childKind + '</span></td>' +
+          '<td>' + mark + '</td>' +
+          '<td>' + seedCnt + '</td>' +
+          '<td style="color:#94a3b8;">2026-0' + (1 + (i % 6)) + '-1' + (i % 9) + '</td>' +
+          '<td>' +
+            '<button class="btn btn-outline" style="padding:3px 8px; font-size:11px;" onclick="openTagEdit(\'' + cn + '\',\'' + childDepth + '\',\'' + childKind + '\')">编辑</button> ' +
+            '<button class="btn btn-outline" style="padding:3px 8px; font-size:11px;" onclick="openTagSubAdd(\'' + (breadcrumb ? breadcrumb + ' > ' : '') + cn + '\')">添加子标签</button>' +
+          '</td>' +
+        '</tr>';
+      }).join('');
+      tbody.innerHTML = rows;
+    } else {
+      tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; color:#94a3b8; padding:32px;">该节点为末级「' + kind + '」，暂无下级标签。可点击右上角「添加子标签」新建。</td></tr>';
+    }
+  }
+}
+
 // 外部素材Tab切换
 function switchExtTab(el, status) {
   el.parentElement.querySelectorAll('.tab-item').forEach(t => t.classList.remove('active'));
@@ -3814,9 +4244,252 @@ function switchBatchTagMode(mode) {
   document.getElementById('batch-tag-ai-hint').style.display = manual ? 'none' : 'block';
 }
 
+// ===== Cascader 级联选择器 引擎 =====
+// 从单个 tree-item 元素提取标签名（排除 arrow / badge / 编辑图标）
+function extractTreeItemLabel(item) {
+  var dl = item.getAttribute && item.getAttribute('data-label');
+  if (dl && dl.trim()) return dl.trim();
+  var spans = item.querySelectorAll(':scope > span');
+  for (var i = 0; i < spans.length; i++) {
+    var s = spans[i];
+    if (s.classList.contains('arrow') || s.classList.contains('tree-badge') || s.classList.contains('tree-edit')) continue;
+    var t = (s.textContent || '').trim();
+    if (t) return t;
+  }
+  // 没有独立 span（如叶子直接写文本）时，仅取文本节点/非图标元素文本
+  var txt = '';
+  Array.prototype.forEach.call(item.childNodes, function(n){
+    if (n.nodeType === 3) txt += n.textContent;
+    else if (n.nodeType === 1 && !n.classList.contains('arrow') && !n.classList.contains('tree-badge') && !n.classList.contains('tree-edit')) txt += n.textContent;
+  });
+  return txt.replace(/▶/g, '').trim();
+}
+
+// 递归解析某个树容器（.tree-children 或维度根容器）的直接子级 tree-item
+function parseTreeChildren(container) {
+  var nodes = [];
+  var child = container.firstElementChild;
+  while (child) {
+    if (child.classList && child.classList.contains('tree-item')) {
+      var label = extractTreeItemLabel(child);
+      // 跳过“+ 新增...”等操作项
+      if (label && label.indexOf('+') !== 0) {
+        var node = { label: label };
+        var sib = child.nextElementSibling;
+        if (sib && sib.classList && sib.classList.contains('tree-children')) {
+          var kids = parseTreeChildren(sib);
+          if (kids.length) node.children = kids;
+        }
+        nodes.push(node);
+      }
+    }
+    child = child.nextElementSibling;
+  }
+  return nodes;
+}
+
+// 将“标签管理”各维度树（DOM）解析为级联数据，保证与标签维度树完全一致
+function buildTagTree() {
+  var dims = [
+    { id: 'tag-tree-genre',  label: '题材' },
+    { id: 'tag-tree-scene',  label: '场景' },
+    { id: 'tag-tree-era',    label: '年代' },
+    { id: 'tag-tree-gender', label: '受众频道' },
+    { id: 'tag-tree-crowd',  label: '特定人群' },
+    { id: 'tag-tree-custom', label: '自定义' }
+  ];
+  return dims.map(function(d){
+    var container = document.getElementById(d.id);
+    var children = container ? parseTreeChildren(container) : [];
+    return { label: d.label, children: children };
+  }).filter(function(n){ return n.children && n.children.length; });
+}
+
+// 初始化一个级联选择器
+function initCascader(id, tree, opts) {
+  opts = opts || {};
+  var host = document.getElementById(id);
+  if (!host) return;
+  var multi = opts.multi !== false; // 默认多选
+  host.classList.add('cascader');
+  host.innerHTML = '';
+  var placeholder = opts.placeholder || '请选择';
+
+  var trigger = document.createElement('div');
+  trigger.className = 'cascader-trigger' + (multi ? ' multi' : '');
+  if (opts.minWidth) trigger.style.minWidth = opts.minWidth;
+  trigger.innerHTML = '<span class="cascader-tags"><span class="cascader-text cascader-placeholder">' + placeholder + '</span></span><span class="cascader-caret">▼</span>';
+  var panel = document.createElement('div');
+  panel.className = 'cascader-panel';
+  host.appendChild(trigger);
+  host.appendChild(panel);
+
+  // state.paths: 多选路径数组；state.path: 单选路径（兼容旧接口）
+  var state = { tree: tree, multi: multi, path: [], paths: [], placeholder: placeholder, onSelect: opts.onSelect };
+  host._cascader = state;
+
+  function pathKey(p) { return p.join('·'); }
+  function isChecked(p) {
+    var k = pathKey(p);
+    return state.paths.some(function(x){ return pathKey(x) === k; });
+  }
+  function togglePath(p) {
+    var k = pathKey(p);
+    var idx = -1;
+    for (var i = 0; i < state.paths.length; i++) { if (pathKey(state.paths[i]) === k) { idx = i; break; } }
+    if (idx >= 0) state.paths.splice(idx, 1);
+    else state.paths.push(p.slice());
+  }
+
+  // 渲染面板的列（activePath 为当前展开路径）
+  function renderColumns(activePath) {
+    panel.innerHTML = '';
+    var level = tree;
+    for (var depth = 0; depth <= activePath.length; depth++) {
+      if (!level || !level.length) break;
+      var col = document.createElement('div');
+      col.className = 'cascader-col';
+      (function(levelNodes, depthIdx){
+        levelNodes.forEach(function(node){
+          var opt = document.createElement('div');
+          opt.className = 'cascader-option';
+          var isActive = activePath[depthIdx] === node.label;
+          if (isActive) opt.classList.add('active');
+          var hasChildren = node.children && node.children.length;
+          var leafPath = activePath.slice(0, depthIdx).concat([node.label]);
+          if (!hasChildren && multi && isChecked(leafPath)) opt.classList.add('checked');
+          var checkHtml = (!hasChildren && multi) ? '<span class="opt-check">' + (isChecked(leafPath) ? '✓' : '') + '</span>' : '';
+          opt.innerHTML = '<span style="display:flex; align-items:center; gap:6px;">' + checkHtml + '<span>' + node.label + '</span></span>' + (hasChildren ? '<span class="opt-arrow">▶</span>' : '');
+          opt.onclick = function(e){
+            e.stopPropagation();
+            var newPath = activePath.slice(0, depthIdx);
+            newPath.push(node.label);
+            if (hasChildren) {
+              renderColumns(newPath);
+            } else if (multi) {
+              // 多选叶子：切换选中，保持面板打开
+              togglePath(newPath);
+              updateTriggerText();
+              renderColumns(newPath);
+              if (typeof state.onSelect === 'function') state.onSelect(state.paths.map(function(p){ return p.slice(); }));
+            } else {
+              // 单选叶子：提交并关闭
+              state.path = newPath;
+              updateTriggerText();
+              host.classList.remove('open');
+              if (typeof state.onSelect === 'function') state.onSelect(newPath.slice());
+            }
+          };
+          col.appendChild(opt);
+        });
+      })(level, depth);
+      panel.appendChild(col);
+      // 深入到下一列
+      var chosen = null;
+      for (var i = 0; i < level.length; i++) { if (level[i].label === activePath[depth]) { chosen = level[i]; break; } }
+      level = chosen && chosen.children ? chosen.children : null;
+    }
+  }
+
+  function updateTriggerText() {
+    var tagsBox = trigger.querySelector('.cascader-tags');
+    if (!tagsBox) return;
+    tagsBox.innerHTML = '';
+    if (multi) {
+      if (!state.paths.length) {
+        var ph = document.createElement('span');
+        ph.className = 'cascader-text cascader-placeholder';
+        ph.textContent = state.placeholder;
+        tagsBox.appendChild(ph);
+        return;
+      }
+      state.paths.forEach(function(p){
+        var tag = document.createElement('span');
+        tag.className = 'cascader-tag';
+        var label = p[p.length - 1];
+        tag.innerHTML = '<span>' + label + '</span><span class="tag-x">×</span>';
+        tag.querySelector('.tag-x').onclick = function(e){
+          e.stopPropagation();
+          togglePath(p);
+          updateTriggerText();
+          if (host.classList.contains('open')) renderColumns(state.paths.length ? state.paths[state.paths.length-1] : []);
+          if (typeof state.onSelect === 'function') state.onSelect(state.paths.map(function(x){ return x.slice(); }));
+        };
+        tagsBox.appendChild(tag);
+      });
+    } else {
+      var txt = document.createElement('span');
+      txt.className = 'cascader-text';
+      if (state.path.length) { txt.textContent = state.path.join(' / '); }
+      else { txt.textContent = state.placeholder; txt.classList.add('cascader-placeholder'); }
+      tagsBox.appendChild(txt);
+    }
+  }
+
+  trigger.onclick = function(e){
+    e.stopPropagation();
+    var isOpen = host.classList.contains('open');
+    // 关闭其它已打开的级联
+    document.querySelectorAll('.cascader.open').forEach(function(c){ if (c !== host) c.classList.remove('open'); });
+    if (isOpen) { host.classList.remove('open'); }
+    else { renderColumns(state.paths.length ? state.paths[state.paths.length-1] : []); host.classList.add('open'); }
+  };
+
+  renderColumns([]);
+  updateTriggerText();
+}
+
+// 全局标签树缓存
+var SEED_TAG_TREE_DATA = null;
+
+// 读取级联当前选中路径（单选：返回路径数组；多选：返回最后一次选中的路径，兼容旧调用）
+function getCascaderValue(id) {
+  var host = document.getElementById(id);
+  if (!host || !host._cascader) return [];
+  var s = host._cascader;
+  if (s.multi) return s.paths.length ? s.paths[s.paths.length-1].slice() : [];
+  return s.path.slice();
+}
+
+// 读取多选级联的全部选中路径
+function getCascaderValues(id) {
+  var host = document.getElementById(id);
+  if (!host || !host._cascader) return [];
+  var s = host._cascader;
+  return s.multi ? s.paths.map(function(p){ return p.slice(); }) : (s.path.length ? [s.path.slice()] : []);
+}
+
+// 清空级联选择
+function clearCascader(id) {
+  var host = document.getElementById(id);
+  if (host && host._cascader) {
+    host._cascader.path = [];
+    host._cascader.paths = [];
+    var tagsBox = host.querySelector('.cascader-tags');
+    if (tagsBox) tagsBox.innerHTML = '<span class="cascader-text cascader-placeholder">' + host._cascader.placeholder + '</span>';
+  }
+}
+
+// 点击空白处关闭所有级联面板
+document.addEventListener('click', function(){
+  document.querySelectorAll('.cascader.open').forEach(function(c){ c.classList.remove('open'); });
+});
+
 // 初始化：首屏渲染裂变参数联动
 document.addEventListener('DOMContentLoaded', function(){
   if (typeof renderFissionParams === 'function') renderFissionParams();
+  if (typeof injectTreeEditIcons === 'function') injectTreeEditIcons();
+  // 初始化标签级联选择器（查询筛选 / 新增 / 编辑）
+  var tagTree = buildTagTree();
+  SEED_TAG_TREE_DATA = tagTree;
+  initCascader('seed-filter-cascader', tagTree, { placeholder: '全部标签', minWidth: '240px' });
+  initCascader('seed-add-cascader', tagTree, { placeholder: '选择标签：维度 / 分类 / 具体标签', minWidth: '240px' });
+  initCascader('seed-edit-cascader', tagTree, { placeholder: '选择标签：维度 / 分类 / 具体标签', minWidth: '240px' });
+  // 批量导入：统一配置 + 一对一配置的标签级联选择器（多选、全维度）
+  initCascader('imp-unified-cascader', tagTree, { placeholder: '选择标签：维度 / 分类 / 具体标签', minWidth: '240px' });
+  initCascader('imp-o2o-cascader-1', tagTree, { placeholder: '选择标签…', minWidth: '200px' });
+  initCascader('imp-o2o-cascader-2', tagTree, { placeholder: '选择标签…', minWidth: '200px' });
+  initCascader('imp-o2o-cascader-3', tagTree, { placeholder: '选择标签…', minWidth: '200px' });
 });
 </script>
 
