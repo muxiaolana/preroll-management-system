@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>物料管理</title>
+<title>短剧前贴管家</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.js"></script>
 <style>
 * { box-sizing: border-box; }
@@ -101,6 +101,9 @@ tbody tr:hover { background: #f8fafc; }
 .fission-type-card .ft-name { font-size: 13px; font-weight: 600; color: #1e293b; }
 .fission-type-card .ft-desc { font-size: 11px; color: #64748b; line-height: 1.4; }
 .fission-type-card .ft-count { font-size: 11px; color: #94a3b8; margin-top: 2px; }
+.fission-type-card.disabled { background: #f8fafc; border-style: dashed; border-color: #e2e8f0; cursor: not-allowed; opacity: .6; }
+.fission-type-card.disabled:hover { border-color: #e2e8f0; background: #f8fafc; }
+.fission-type-card .ft-badge { font-size: 10px; color: #94a3b8; background: #f1f5f9; border: 1px solid #e2e8f0; border-radius: 6px; padding: 1px 8px; align-self: flex-start; }
 .bridge-card { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 16px; display: flex; gap: 16px; align-items: flex-start; }
 .bridge-thumb { width: 120px; height: 68px; border-radius: 6px; background: linear-gradient(135deg,#c084fc,#7c3aed); flex-shrink: 0; position: relative; }
 .bridge-thumb .play-icon { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; color: #fff; font-size: 20px; background: rgba(0,0,0,.2); border-radius: 6px; }
@@ -112,6 +115,33 @@ tbody tr:hover { background: #f8fafc; }
 .fs-done { background: #d1fae5; color: #065f46; }
 .fs-pushed { background: #ede9fe; color: #7c3aed; }
 .fs-failed { background: #fee2e2; color: #991b1b; }
+
+/* ===== 数据资产管理 ===== */
+.asset-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 16px; }
+.asset-card { background: #fff; border: 1px solid #e2e8f0; border-radius: 12px; overflow: hidden; cursor: pointer; transition: all .15s; display: flex; flex-direction: column; }
+.asset-card:hover { border-color: #c4b5fd; box-shadow: 0 8px 24px rgba(124,58,237,.1); transform: translateY(-2px); }
+.asset-thumb { height: 140px; position: relative; display: flex; align-items: center; justify-content: center; font-size: 40px; color: rgba(255,255,255,.9); }
+.asset-thumb .asset-type-badge { position: absolute; top: 8px; left: 8px; background: rgba(255,255,255,.9); color: #6d28d9; font-size: 11px; font-weight: 600; padding: 2px 8px; border-radius: 10px; }
+.asset-thumb .asset-id { position: absolute; bottom: 8px; right: 8px; background: rgba(0,0,0,.35); color: #fff; font-size: 10px; padding: 1px 6px; border-radius: 8px; }
+.asset-body { padding: 12px 14px; flex: 1; display: flex; flex-direction: column; gap: 6px; }
+.asset-body .asset-name { font-size: 14px; font-weight: 600; color: #1e293b; }
+.asset-body .asset-meta { font-size: 12px; color: #64748b; line-height: 1.5; }
+.asset-tags { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 2px; }
+.asset-tag { font-size: 11px; background: #f1f5f9; color: #475569; padding: 1px 7px; border-radius: 10px; }
+.asset-footer { padding: 8px 14px; border-top: 1px solid #f1f5f9; display: flex; align-items: center; justify-content: space-between; }
+.asset-footer .asset-ver { font-size: 11px; color: #94a3b8; }
+/* 资产详情弹窗 分层属性 */
+.detail-layer { border: 1px solid #e2e8f0; border-radius: 10px; margin-bottom: 12px; overflow: hidden; }
+.detail-layer-head { display: flex; align-items: center; gap: 8px; padding: 10px 14px; background: #f8fafc; border-bottom: 1px solid #e2e8f0; font-size: 13px; font-weight: 600; color: #1e293b; }
+.detail-layer-head .dl-dot { width: 8px; height: 8px; border-radius: 50%; background: #7c3aed; }
+.detail-group { padding: 10px 14px; border-bottom: 1px dashed #f1f5f9; }
+.detail-group:last-child { border-bottom: none; }
+.detail-group .dg-title { font-size: 12px; font-weight: 600; color: #6d28d9; margin-bottom: 8px; }
+.attr-row { display: grid; grid-template-columns: 150px 1fr; gap: 10px; padding: 4px 0; font-size: 12px; align-items: start; }
+.attr-row .attr-k { color: #94a3b8; }
+.attr-row .attr-v { color: #334155; }
+.color-swatch { display: inline-block; width: 12px; height: 12px; border-radius: 3px; vertical-align: middle; margin-right: 5px; border: 1px solid rgba(0,0,0,.1); }
+.attr-badge { display: inline-block; font-size: 11px; background: #ede9fe; color: #6d28d9; padding: 1px 7px; border-radius: 10px; margin: 0 4px 4px 0; }
 
 /* ===== Cascader 级联选择器 ===== */
 .cascader { position: relative; display: inline-block; }
@@ -142,7 +172,7 @@ tbody tr:hover { background: #f8fafc; }
 <div style="display:flex; min-height:100vh;">
   <!-- 侧边栏 -->
   <aside style="width:220px; background:#fff; border-right:1px solid #e2e8f0; padding:16px 12px; display:flex; flex-direction:column; position:fixed; top:0; left:0; bottom:0; z-index:100;">
-    <div style="padding:6px 14px 14px; font-size:15px; font-weight:700; color:#1e293b;">物料管理</div>
+    <div style="padding:6px 14px 14px; font-size:15px; font-weight:700; color:#1e293b;">短剧前贴管家</div>
     <div class="sidebar-divider" style="margin-top:0;"></div>
 
     <a class="nav-link active" onclick="switchModule('seed')" id="nav-seed">种子前贴管理</a>
@@ -151,7 +181,8 @@ tbody tr:hover { background: #f8fafc; }
     <a class="nav-link" onclick="switchModule('external')" id="nav-external">外部素材录入</a>
     <a class="nav-link" onclick="switchModule('copylib')" id="nav-copylib">前贴文案库</a>
     <a class="nav-link" onclick="switchModule('sound')" id="nav-sound">声音管理</a>
-    <a class="nav-link" onclick="switchModule('fission')" id="nav-fission">裂变工作台</a>
+    <a class="nav-link" onclick="switchModule('fission')" id="nav-fission">剧燃前贴工作台</a>
+    <a class="nav-link" onclick="switchModule('data')" id="nav-data">数据资产管理</a>
 
     <div class="sidebar-divider"></div>
     <a class="nav-link" style="color:#94a3b8;">数据概览</a>
@@ -984,7 +1015,7 @@ tbody tr:hover { background: #f8fafc; }
           <select class="filter-select">
             <option>全部</option>
             <option>种子裂变</option>
-            <option>批量裂变</option>
+            <option>文案裂变</option>
             <option>外部录入转化</option>
           </select>
 
@@ -1900,9 +1931,8 @@ tbody tr:hover { background: #f8fafc; }
     <!-- ==================== 模块5：裂变工作台 ==================== -->
     <div class="module" id="module-fission">
       <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:20px;">
-        <h1 style="font-size:20px; font-weight:700; color:#1e293b; margin:0;">裂变工作台</h1>
+        <h1 style="font-size:20px; font-weight:700; color:#1e293b; margin:0;">剧燃前贴工作台</h1>
         <div style="display:flex; gap:8px;">
-          <button class="btn btn-outline">裂变历史</button>
           <button class="btn btn-primary" onclick="showModal('fission-task-modal')">+ 发起裂变任务</button>
         </div>
       </div>
@@ -1915,22 +1945,27 @@ tbody tr:hover { background: #f8fafc; }
 
       <!-- —————— 子视图A：裂变创作台 —————— -->
       <div id="fission-studio">
-      <!-- 裂变模式切换：单种子 / 批量种子 -->
-      <div style="display:flex; align-items:center; gap:12px; margin-bottom:16px;">
+      <!-- 裂变模式切换：种子裂变 / 前贴文案裂变 -->
+      <div style="display:flex; align-items:center; gap:16px; margin-bottom:16px;">
         <span style="font-size:13px; color:#64748b; font-weight:500;">裂变模式：</span>
-        <div class="tab-bar" style="margin-bottom:0;">
-          <div class="tab-item active" onclick="switchFissionMode(this,'single')">单种子裂变</div>
-          <div class="tab-item" onclick="switchFissionMode(this,'batch')">批量种子裂变</div>
-        </div>
-        <span style="font-size:12px; color:#94a3b8;">批量模式下，每个种子将生成一个独立子任务并汇总为一个批次</span>
+        <label style="font-size:13px; color:#334155; display:flex; align-items:center; gap:5px; cursor:pointer;">
+          <input type="radio" name="fission-mode" value="single" checked onchange="switchFissionModeRadio(this)"> 种子裂变
+        </label>
+        <label style="font-size:13px; color:#334155; display:flex; align-items:center; gap:5px; cursor:pointer;">
+          <input type="radio" name="fission-mode" value="batch" onchange="switchFissionModeRadio(this)"> 前贴文案裂变
+        </label>
+        <span style="font-size:12px; color:#94a3b8;">前贴文案裂变基于文案库批量生成前贴，汇总为一个批次</span>
       </div>
 
-      <!-- 单种子：原片桥接区 -->
+      <!-- 单种子：操作对象区 -->
       <div id="fission-single">
       <div class="card-section">
         <div class="section-title">
-          <span>原片桥接 <span style="font-size:12px; color:#94a3b8; font-weight:400;">— 当前工作种子</span></span>
-          <button class="btn btn-outline" style="font-size:12px;">切换种子</button>
+          <span>操作对象 <span style="font-size:12px; color:#94a3b8; font-weight:400;">— 当前工作种子</span></span>
+          <div style="display:flex; gap:8px;">
+            <button class="btn btn-outline" style="font-size:12px;" onclick="toggleCreativeBreakdown(this)">创意拆解</button>
+            <button class="btn btn-outline" style="font-size:12px;">切换种子</button>
+          </div>
         </div>
         <div class="bridge-card">
           <div class="bridge-thumb">
@@ -1954,95 +1989,131 @@ tbody tr:hover { background: #f8fafc; }
             </div>
           </div>
         </div>
+
+        <!-- 创意拆解内容（点击「创意拆解」展开） -->
+        <div id="creative-breakdown" style="display:none; margin-top:16px; padding-top:16px; border-top:1px dashed #e2e8f0;">
+          <!-- 1. 爆点结构 -->
+          <div style="margin-bottom:18px;">
+            <div style="display:flex; align-items:center; gap:8px; margin-bottom:10px;">
+              <span style="width:22px; height:22px; border-radius:6px; background:#ede9fe; color:#6d28d9; display:inline-flex; align-items:center; justify-content:center; font-size:12px; font-weight:700;">1</span>
+              <span style="font-size:14px; font-weight:600; color:#1e293b;">爆点结构</span>
+            </div>
+            <div style="display:flex; flex-direction:column; gap:8px; font-size:13px; color:#334155; line-height:1.7;">
+              <div><span style="color:#6d28d9; font-weight:600;">吸引力内核：</span>以高爽感反转剧情作为情绪锚点，配合"看剧领钱"的利益驱动，结合治愈系空镜降低广告抵触感，实现高转化。</div>
+              <div><span style="color:#6d28d9; font-weight:600;">前3秒钩子：</span>直接展示多人物短剧群像海报，配合"反击/反杀"等强情绪关键词，瞬间锁定爱看爽剧的目标受众。</div>
+              <div><span style="color:#6d28d9; font-weight:600;">强反转：</span>从单纯的"看剧"反转到"能领金币"的利益点；从"剧情反转猜不到"引申到"提现门槛低至1元"。</div>
+              <div><span style="color:#6d28d9; font-weight:600;">结尾钩子：</span>展示品牌 Logo 并明确 slogan"解锁看剧赚钱新方式"，引导点击链接。</div>
+              <div><span style="color:#6d28d9; font-weight:600;">吸引力要素：</span>爽剧题材吸引；低门槛提现诱惑；解压萌宠视觉；免费看剧痛点解决。</div>
+            </div>
+          </div>
+
+          <!-- 2. 四维解析 -->
+          <div style="margin-bottom:18px;">
+            <div style="display:flex; align-items:center; gap:8px; margin-bottom:10px;">
+              <span style="width:22px; height:22px; border-radius:6px; background:#ede9fe; color:#6d28d9; display:inline-flex; align-items:center; justify-content:center; font-size:12px; font-weight:700;">2</span>
+              <span style="font-size:14px; font-weight:600; color:#1e293b;">四维解析</span>
+            </div>
+            <div style="display:flex; flex-direction:column; gap:8px; font-size:13px; color:#334155; line-height:1.7;">
+              <div><span style="color:#6d28d9; font-weight:600;">剧情框架：</span>类别吸引（反击/重生）→ 情绪缓冲（猫咪）→ 实力证明（剧库录屏）→ 福利兑现（提现 UI）→ 远景向往（金币雨+美景）→ 品牌定格。</div>
+              <div><span style="color:#6d28d9; font-weight:600;">画面风格：</span>高饱和度色调，海报为冷色调商业质感，APP 界面为简洁白底红字，风景区为高明度自然光。</div>
+              <div><span style="color:#6d28d9; font-weight:600;">镜头结构：</span>海报静止帧、实拍萌宠近景、手机 UI 录屏、航拍空镜素材的混剪，多景别交替。</div>
+              <div><span style="color:#6d28d9; font-weight:600;">剪辑节奏：</span>前段急促强引导，中段录屏快速扫视，后段空镜拉长节奏，形成张弛有度的视听体验。</div>
+              <div><span style="color:#6d28d9; font-weight:600;">钩子类型：</span>利益点诱导；视觉新奇感；品类心智占领。</div>
+              <div><span style="color:#6d28d9; font-weight:600;">内容密度：</span>信息量丰富，涵盖了品类、福利、操作流程、审美体验四个维度。</div>
+            </div>
+          </div>
+
+          <!-- 3. 脚本拆解 -->
+          <div>
+            <div style="display:flex; align-items:center; gap:8px; margin-bottom:10px;">
+              <span style="width:22px; height:22px; border-radius:6px; background:#ede9fe; color:#6d28d9; display:inline-flex; align-items:center; justify-content:center; font-size:12px; font-weight:700;">3</span>
+              <span style="font-size:14px; font-weight:600; color:#1e293b;">脚本拆解 <span style="font-size:12px; color:#94a3b8; font-weight:400;">(6)</span></span>
+            </div>
+            <div style="border:1px solid #e2e8f0; border-radius:8px; overflow:hidden;">
+              <table style="margin:0;">
+                <thead>
+                  <tr>
+                    <th style="width:64px;">时间</th>
+                    <th>画面</th>
+                    <th>旁白</th>
+                    <th style="width:72px;">情绪</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td style="color:#7c3aed; font-weight:600; white-space:nowrap;">0-8s</td>
+                    <td style="font-size:12px; color:#334155;">画面中心为短剧合集海报，上方文字"反击马上开始"，下方为"河马剧场连续追剧有机会获得200000金币"的福利信息。</td>
+                    <td style="font-size:12px; color:#334155;">反击马上开始，点开左下角直接接上</td>
+                    <td><span class="pill" style="background:#fee2e2; color:#b91c1c; font-size:11px;">亢奋/期待</span></td>
+                  </tr>
+                  <tr>
+                    <td style="color:#7c3aed; font-weight:600; white-space:nowrap;">8-11s</td>
+                    <td style="font-size:12px; color:#334155;">近景，一只浅黄色的小奶猫抱着奶瓶喝奶，背景是格子布纹。</td>
+                    <td style="font-size:12px; color:#334155;">河马剧场一刷，时间像被猫叼走了</td>
+                    <td><span class="pill" style="background:#dcfce7; color:#15803d; font-size:11px;">放松/治愈</span></td>
+                  </tr>
+                  <tr>
+                    <td style="color:#7c3aed; font-weight:600; white-space:nowrap;">11-17s</td>
+                    <td style="font-size:12px; color:#334155;">手机录屏画面，快速上下滑动短剧列表，展示《反转》《重生》《马甲》等热门分类及高播放量封面。</td>
+                    <td style="font-size:12px; color:#334155;">救命这个反转我真没猜到…打开河马剧场，超多免费短剧随时看</td>
+                    <td><span class="pill" style="background:#fef9c3; color:#a16207; font-size:11px;">震惊/好奇</span></td>
+                  </tr>
+                  <tr>
+                    <td style="color:#7c3aed; font-weight:600; white-space:nowrap;">17-23s</td>
+                    <td style="font-size:12px; color:#334155;">APP 提现界面展示，上方显示余额660元，下方有0.3元、30元等提现档位，高亮显示"看1个小视频解锁"。</td>
+                    <td style="font-size:12px; color:#334155;">新人满1元后做小任务可解锁提现，快点击下方链接下载河马剧场吧</td>
+                    <td><span class="pill" style="background:#ffedd5; color:#c2410c; font-size:11px;">爽感兑现</span></td>
+                  </tr>
+                  <tr>
+                    <td style="color:#7c3aed; font-weight:600; white-space:nowrap;">23-32s</td>
+                    <td style="font-size:12px; color:#334155;">空镜剪辑，展示瑞士风格的雪山、草地、缆车、湖畔木屋。金币特效不断从屏幕上方掉落。</td>
+                    <td style="font-size:12px; color:#334155;">别让金币擦肩而过，河马剧场连续追剧，有机会获得200000金币</td>
+                    <td><span class="pill" style="background:#e0e7ff; color:#4338ca; font-size:11px;">向往</span></td>
+                  </tr>
+                  <tr>
+                    <td style="color:#7c3aed; font-weight:600; white-space:nowrap;">32-36s</td>
+                    <td style="font-size:12px; color:#334155;">红底白字的"河马剧场"Logo 居中，下方文字"下载河马剧场，解锁看剧赚钱新方式"。</td>
+                    <td style="font-size:12px; color:#334155;">解锁看剧赚钱新方式</td>
+                    <td><span class="pill" style="background:#f1f5f9; color:#475569; font-size:11px;">确定感</span></td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
       </div>
       </div><!-- /fission-single -->
 
-      <!-- 批量种子：多选种子面板 -->
+      <!-- 前贴文案裂变：操作对象（前贴脚本文案） -->
       <div id="fission-batch" style="display:none;">
-      <div class="card-section" style="padding:0; overflow:hidden;">
-        <div style="padding:14px 20px; display:flex; align-items:center; justify-content:space-between; border-bottom:1px solid #e2e8f0;">
-          <div style="display:flex; align-items:center; gap:12px;">
-            <span style="font-size:15px; font-weight:600; color:#1e293b;">选择种子前贴</span>
-            <span style="font-size:12px; color:#7c3aed;">已选 3 个种子</span>
-          </div>
-          <div style="display:flex; align-items:center; gap:8px;">
-            <input class="search-input" placeholder="搜索种子名称..." style="width:180px; font-size:12px; padding:6px 10px;">
-            <select style="font-size:12px; border:1px solid #e2e8f0; border-radius:6px; padding:6px 8px; color:#334155;">
-              <option>全部题材</option><option>都市</option><option>玄幻</option><option>古言</option><option>悬疑</option><option>甜宠</option>
-            </select>
-          </div>
+      <div class="card-section">
+        <div class="section-title">
+          <span>操作对象 <span style="font-size:12px; color:#94a3b8; font-weight:400;">— 当前前贴脚本文案</span></span>
+          <button class="btn btn-outline" style="font-size:12px;">切换文案</button>
         </div>
-        <table>
-          <thead>
-            <tr>
-              <th style="width:32px;"><div class="checkbox checked"></div></th>
-              <th>缩略图</th>
-              <th>种子名称</th>
-              <th>标签</th>
-              <th>时长</th>
-              <th>已裂变</th>
-              <th>关联消耗</th>
-              <th>状态</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td><div class="checkbox checked"></div></td>
-              <td><div class="thumb" style="background:linear-gradient(135deg,#c084fc,#7c3aed);"></div></td>
-              <td style="font-weight:500;">霸总归来_开场1</td>
-              <td><span class="pill pill-genre">都市</span> <span class="pill pill-gender-f">女频</span></td>
-              <td>15s</td>
-              <td style="color:#7c3aed; font-weight:600;">32</td>
-              <td>¥18.6万</td>
-              <td><span class="pill pill-status-active">启用</span></td>
-            </tr>
-            <tr>
-              <td><div class="checkbox checked"></div></td>
-              <td><div class="thumb" style="background:linear-gradient(135deg,#60a5fa,#2563eb);"></div></td>
-              <td style="font-weight:500;">仙门弃徒_觉醒A</td>
-              <td><span class="pill pill-genre">玄幻</span> <span class="pill pill-gender-m">男频</span></td>
-              <td>20s</td>
-              <td style="color:#7c3aed; font-weight:600;">28</td>
-              <td>¥12.3万</td>
-              <td><span class="pill pill-status-active">启用</span></td>
-            </tr>
-            <tr>
-              <td><div class="checkbox checked"></div></td>
-              <td><div class="thumb" style="background:linear-gradient(135deg,#f472b6,#db2777);"></div></td>
-              <td style="font-weight:500;">千金复仇_狠人版</td>
-              <td><span class="pill pill-genre">都市</span> <span class="pill pill-gender-f">女频</span></td>
-              <td>18s</td>
-              <td style="color:#7c3aed; font-weight:600;">45</td>
-              <td>¥31.2万</td>
-              <td><span class="pill pill-status-active">启用</span></td>
-            </tr>
-            <tr>
-              <td><div class="checkbox"></div></td>
-              <td><div class="thumb" style="background:linear-gradient(135deg,#a78bfa,#6d28d9);"></div></td>
-              <td style="font-weight:500;">古言虐恋_雨夜逃</td>
-              <td><span class="pill pill-genre">古言</span> <span class="pill pill-gender-f">女频</span></td>
-              <td>16s</td>
-              <td style="color:#7c3aed; font-weight:600;">22</td>
-              <td>¥9.4万</td>
-              <td><span class="pill pill-status-active">启用</span></td>
-            </tr>
-            <tr>
-              <td><div class="checkbox"></div></td>
-              <td><div class="thumb" style="background:linear-gradient(135deg,#fbbf24,#d97706);"></div></td>
-              <td style="font-weight:500;">重生商战_谈判篇</td>
-              <td><span class="pill pill-genre">都市</span> <span class="pill pill-gender-m">男频</span></td>
-              <td>22s</td>
-              <td style="color:#7c3aed; font-weight:600;">15</td>
-              <td>¥6.8万</td>
-              <td><span class="pill pill-status-paused">暂停</span></td>
-            </tr>
-          </tbody>
-        </table>
-        <div style="padding:12px 20px; display:flex; align-items:center; justify-content:space-between; border-top:1px solid #f1f5f9; background:#faf5ff;">
-          <span style="font-size:12px; color:#7c3aed;">已选 3 个种子 · 预计生成 3 子任务</span>
-          <div style="display:flex; gap:6px;">
-            <button class="btn btn-outline" style="font-size:12px;">清空选择</button>
-            <button class="btn btn-outline" style="font-size:12px;">全选启用种子</button>
+        <div style="display:flex; gap:14px; align-items:flex-start;">
+          <div style="width:44px; height:44px; border-radius:10px; background:#ede9fe; color:#6d28d9; display:flex; align-items:center; justify-content:center; font-size:20px; flex-shrink:0;">📝</div>
+          <div style="flex:1; min-width:0;">
+            <div style="font-size:15px; font-weight:600; color:#1e293b;">「三年后我回来了」· 逆袭爽感开场</div>
+            <div style="margin:6px 0 10px; display:flex; gap:6px; flex-wrap:wrap; align-items:center;">
+              <span class="pill pill-genre">都市</span>
+              <span class="pill pill-gender-f">女频</span>
+              <span class="pill" style="background:#f1f5f9; color:#475569; font-size:11px;">口播文案</span>
+              <span style="font-size:12px; color:#94a3b8;">时长约 15s · 128 字</span>
+            </div>
+            <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px; padding:12px 14px; font-size:13px; color:#334155; line-height:1.7;">
+              <div style="color:#94a3b8; font-size:11px; margin-bottom:4px;">【旁白】</div>
+              <div>三年前，她被赶出豪门，身无分文；三年后，她带着整个财团回来了。</div>
+              <div style="color:#94a3b8; font-size:11px; margin:10px 0 4px;">【台词】</div>
+              <div>「当年是你们说我不配——那现在，我倒要看看，谁才是真的高攀不起。」</div>
+            </div>
+            <div style="margin-top:10px; display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
+              <span style="font-size:11px; color:#94a3b8;">文案要素：</span>
+              <span class="pill" style="background:#f1f5f9; color:#475569; font-size:11px;">逆袭打脸</span>
+              <span class="pill" style="background:#f1f5f9; color:#475569; font-size:11px;">身份反转</span>
+              <span class="pill" style="background:#f1f5f9; color:#475569; font-size:11px;">悬念钩子</span>
+              <span class="pill" style="background:#f1f5f9; color:#475569; font-size:11px;">强情绪开场</span>
+            </div>
           </div>
         </div>
       </div>
@@ -2060,7 +2131,7 @@ tbody tr:hover { background: #f8fafc; }
           <div class="fission-type-card selected" data-fk="subject" data-fname="主体 & 元素替换" onclick="toggleFissionType(this)">
             <div class="ft-icon">🎭</div>
             <div class="ft-name">主体 & 元素替换</div>
-            <div class="ft-desc">换脸、换声、替换角色形象、更换背景/场景元素</div>
+            <div class="ft-desc">换脸、换声、替换角色形象、更换背景 / 场景元素</div>
             <div class="ft-count">已生成 156 条</div>
           </div>
           <div class="fission-type-card" data-fk="recreate" data-fname="创意复刻" onclick="toggleFissionType(this)">
@@ -2075,41 +2146,26 @@ tbody tr:hover { background: #f8fafc; }
             <div class="ft-desc">同结构换剧情 / 模板剧情裂变，保留节奏替换内容</div>
             <div class="ft-count">已生成 124 条</div>
           </div>
-          <div class="fission-type-card" data-fk="fx" data-fname="特效增强" onclick="toggleFissionType(this)">
-            <div class="ft-icon">✨</div>
-            <div class="ft-name">特效 & 动态增强</div>
-            <div class="ft-desc">叠加转场特效、动态字幕、视觉冲击力增强处理</div>
-            <div class="ft-count">已生成 67 条</div>
-          </div>
-          <div class="fission-type-card" data-fk="locale" data-fname="本地化适配" onclick="toggleFissionType(this)">
-            <div class="ft-icon">🌏</div>
-            <div class="ft-name">本地化 & 渠道适配</div>
-            <div class="ft-desc">面向不同地域/平台定制，调整比例、文案语言、合规</div>
-            <div class="ft-count">已生成 43 条</div>
-          </div>
-          <div class="fission-type-card" data-fk="interact" data-fname="互动衍生" onclick="toggleFissionType(this)">
-            <div class="ft-icon">💬</div>
-            <div class="ft-name">互动 & 衍生内容</div>
-            <div class="ft-desc">生成评论区引导版、投票互动版、悬念追更版</div>
-            <div class="ft-count">已生成 38 条</div>
-          </div>
-          <div class="fission-type-card" data-fk="remix" data-fname="混剪重组" onclick="toggleFissionType(this)">
+          <div class="fission-type-card disabled" data-fk="remix" data-fname="混剪重组">
             <div class="ft-icon">🎬</div>
             <div class="ft-name">混剪 & 重组</div>
             <div class="ft-desc">多素材片段混剪、顺序重组、节奏变速重组</div>
             <div class="ft-count">已生成 201 条</div>
+            <div class="ft-badge">本期不做</div>
           </div>
-          <div class="fission-type-card" data-fk="script" data-fname="脚本裂变" onclick="toggleFissionType(this)">
+          <div class="fission-type-card disabled" data-fk="script" data-fname="脚本裂变">
             <div class="ft-icon">📝</div>
             <div class="ft-name">叙事 & 脚本裂变</div>
             <div class="ft-desc">改写旁白文案、调整叙事视角、A/B脚本对照</div>
             <div class="ft-count">已生成 95 条</div>
+            <div class="ft-badge">本期不做</div>
           </div>
-          <div class="fission-type-card" data-fk="form" data-fname="形态裂变" onclick="toggleFissionType(this)">
+          <div class="fission-type-card disabled" data-fk="form" data-fname="形态裂变">
             <div class="ft-icon">📐</div>
             <div class="ft-name">内容形态裂变</div>
             <div class="ft-desc">横转竖/竖转横、长转短/短扩长、静态转动态</div>
             <div class="ft-count">已生成 52 条</div>
+            <div class="ft-badge">本期不做</div>
           </div>
         </div>
       </div>
@@ -2117,7 +2173,7 @@ tbody tr:hover { background: #f8fafc; }
       <!-- 裂变参数配置 -->
       <div class="card-section" style="flex:2; min-width:0; margin-bottom:0; display:flex; flex-direction:column;">
         <div class="section-title">
-          <span>操作参数 <span id="fp-subtitle" style="font-size:12px; color:#94a3b8; font-weight:400;">— 主体 & 元素替换</span></span>
+          <span>操作参数 <span id="fp-subtitle" style="font-size:12px; color:#94a3b8; font-weight:400;">— 请先在左侧选择操作方式</span></span>
           <button class="btn btn-primary" style="font-size:12px;">开始生成</button>
         </div>
 
@@ -2140,15 +2196,6 @@ tbody tr:hover { background: #f8fafc; }
             </div>
           </div>
           <div>
-            <label style="font-size:12px; color:#64748b; display:block; margin-bottom:6px;">目标平台</label>
-            <div style="display:flex; gap:6px; flex-wrap:wrap;">
-              <span class="filter-pill active" onclick="this.classList.toggle('active')">通用</span>
-              <span class="filter-pill" onclick="this.classList.toggle('active')">巨量引擎</span>
-              <span class="filter-pill" onclick="this.classList.toggle('active')">腾讯广告</span>
-              <span class="filter-pill" onclick="this.classList.toggle('active')">快手磁力</span>
-            </div>
-          </div>
-          <div>
             <label style="font-size:12px; color:#64748b; display:block; margin-bottom:6px;">优先级</label>
             <select style="font-size:12px; border:1px solid #e2e8f0; border-radius:6px; padding:6px 10px; color:#334155; width:100%;">
               <option>普通</option>
@@ -2158,134 +2205,6 @@ tbody tr:hover { background: #f8fafc; }
           </div>
         </div>
 
-        <!-- 后链路工作流指定 -->
-        <div style="margin-top:16px; padding:14px 16px; background:#f8fafc; border:1px solid #e2e8f0; border-radius:10px;">
-          <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:10px;">
-            <span style="font-size:13px; font-weight:600; color:#1e293b;">后链路工作流指定 <span style="font-size:12px; color:#94a3b8; font-weight:400;">— 裂变前贴产出后自动衔接生成完整素材</span></span>
-            <label style="font-size:12px; color:#64748b; display:flex; align-items:center; gap:4px; cursor:pointer;"><input type="checkbox" checked> 启用后链路</label>
-          </div>
-          <div style="font-size:12px; color:#94a3b8; margin-bottom:8px;">选择衔接处理方式（可多选），选中后填写对应衔接内容：</div>
-          <div style="display:flex; gap:8px; flex-wrap:wrap;">
-            <span class="filter-pill active" onclick="toggleLinkOption(this,'lk-text')">增加衔接文本</span>
-            <span class="filter-pill active" onclick="toggleLinkOption(this,'lk-visual')">增加衔接画面</span>
-            <span class="filter-pill" onclick="toggleLinkOption(this,'lk-plot')">增加衔接剧情</span>
-            <span class="filter-pill" onclick="toggleLinkOption(this,'lk-cta')">增加行动号召 CTA</span>
-            <span class="filter-pill" onclick="toggleLinkOption(this,'lk-outro')">增加片尾引导</span>
-            <span class="filter-pill" onclick="toggleLinkOption(this,'lk-fx')">增加转场特效</span>
-          </div>
-
-          <!-- 衔接内容输入口（随选中项显示） -->
-          <div style="margin-top:12px; display:flex; flex-direction:column; gap:10px;">
-            <div id="lk-text" class="link-input-block">
-              <label style="font-size:12px; color:#334155; font-weight:500; display:block; margin-bottom:4px;">衔接文本内容</label>
-              <textarea rows="2" placeholder="输入衔接旁白/字幕文案，如：想知道她的选择吗？完整剧情马上揭晓…" style="width:100%; border:1px solid #e2e8f0; border-radius:6px; padding:8px 10px; font-size:13px; resize:vertical; box-sizing:border-box;"></textarea>
-            </div>
-            <div id="lk-visual" class="link-input-block">
-              <label style="font-size:12px; color:#334155; font-weight:500; display:block; margin-bottom:4px;">衔接画面内容</label>
-              <div style="display:flex; gap:8px; align-items:center;">
-                <input placeholder="输入画面描述 / 指定衔接镜头，如：主角特写 + 剧名 LOGO" style="flex:1; border:1px solid #e2e8f0; border-radius:6px; padding:8px 10px; font-size:13px;">
-                <button class="btn btn-outline" style="font-size:12px; white-space:nowrap;">上传画面素材</button>
-              </div>
-            </div>
-            <div id="lk-plot" class="link-input-block" style="display:none;">
-              <label style="font-size:12px; color:#334155; font-weight:500; display:block; margin-bottom:6px;">衔接剧情</label>
-              <!-- 已添加的衔接剧情（可多个） -->
-              <div id="plot-added-list" style="display:flex; flex-direction:column; gap:6px; margin-bottom:8px;"></div>
-              <button class="btn btn-outline" style="font-size:12px;" onclick="togglePlotQuery()">+ 添加剧情</button>
-
-              <!-- 剧情查询面板 -->
-              <div id="plot-query-panel" style="display:none; margin-top:10px; padding:12px 14px; background:#fff; border:1px solid #e2e8f0; border-radius:8px;">
-                <div style="display:flex; gap:8px; flex-wrap:wrap; align-items:flex-end;">
-                  <div>
-                    <label style="font-size:11px; color:#94a3b8; display:block; margin-bottom:4px;">数据源</label>
-                    <select style="font-size:12px; border:1px solid #e2e8f0; border-radius:6px; padding:6px 10px; color:#334155;">
-                      <option>剧集素材库</option>
-                      <option>已上线短剧</option>
-                      <option>外部授权片源</option>
-                      <option>自制剧情库</option>
-                    </select>
-                  </div>
-                  <div>
-                    <label style="font-size:11px; color:#94a3b8; display:block; margin-bottom:4px;">剧名称</label>
-                    <input placeholder="输入剧名称" style="width:130px; font-size:12px; border:1px solid #e2e8f0; border-radius:6px; padding:6px 10px;">
-                  </div>
-                  <div>
-                    <label style="font-size:11px; color:#94a3b8; display:block; margin-bottom:4px;">第几集</label>
-                    <input placeholder="如 12" style="width:70px; font-size:12px; border:1px solid #e2e8f0; border-radius:6px; padding:6px 10px;">
-                  </div>
-                  <div>
-                    <label style="font-size:11px; color:#94a3b8; display:block; margin-bottom:4px;">开始时间</label>
-                    <input placeholder="00:00" style="width:70px; font-size:12px; border:1px solid #e2e8f0; border-radius:6px; padding:6px 10px;">
-                  </div>
-                  <div>
-                    <label style="font-size:11px; color:#94a3b8; display:block; margin-bottom:4px;">结束时间</label>
-                    <input placeholder="00:30" style="width:70px; font-size:12px; border:1px solid #e2e8f0; border-radius:6px; padding:6px 10px;">
-                  </div>
-                  <button class="btn btn-primary" style="font-size:12px;" onclick="runPlotQuery()">查询</button>
-                </div>
-
-                <!-- 查询结果列表 -->
-                <div id="plot-query-results" style="display:none; margin-top:12px;">
-                  <div style="font-size:11px; color:#94a3b8; margin-bottom:6px;">查询结果（勾选后添加）：</div>
-                  <div style="border:1px solid #e2e8f0; border-radius:6px; overflow:hidden;">
-                    <label style="display:flex; align-items:center; gap:8px; padding:8px 10px; border-bottom:1px solid #f1f5f9; font-size:12px; color:#334155; cursor:pointer;">
-                      <input type="checkbox" class="plot-result-cb" data-plot="霸总归来 · 第12集 · 00:05-00:32 · 反转对峙">
-                      <span style="flex:1;">霸总归来 · 第12集 <span style="color:#94a3b8;">00:05-00:32</span></span>
-                      <span class="pill" style="background:#ede9fe; color:#6d28d9; font-size:11px;">反转对峙</span>
-                    </label>
-                    <label style="display:flex; align-items:center; gap:8px; padding:8px 10px; border-bottom:1px solid #f1f5f9; font-size:12px; color:#334155; cursor:pointer;">
-                      <input type="checkbox" class="plot-result-cb" data-plot="霸总归来 · 第13集 · 01:10-01:45 · 秘书身世揭秘">
-                      <span style="flex:1;">霸总归来 · 第13集 <span style="color:#94a3b8;">01:10-01:45</span></span>
-                      <span class="pill" style="background:#ede9fe; color:#6d28d9; font-size:11px;">身世揭秘</span>
-                    </label>
-                    <label style="display:flex; align-items:center; gap:8px; padding:8px 10px; border-bottom:1px solid #f1f5f9; font-size:12px; color:#334155; cursor:pointer;">
-                      <input type="checkbox" class="plot-result-cb" data-plot="霸总归来 · 第15集 · 00:20-00:58 · 豪门恩怨爆发">
-                      <span style="flex:1;">霸总归来 · 第15集 <span style="color:#94a3b8;">00:20-00:58</span></span>
-                      <span class="pill" style="background:#ede9fe; color:#6d28d9; font-size:11px;">恩怨爆发</span>
-                    </label>
-                    <label style="display:flex; align-items:center; gap:8px; padding:8px 10px; font-size:12px; color:#334155; cursor:pointer;">
-                      <input type="checkbox" class="plot-result-cb" data-plot="霸总归来 · 第18集 · 02:00-02:30 · 复仇高潮">
-                      <span style="flex:1;">霸总归来 · 第18集 <span style="color:#94a3b8;">02:00-02:30</span></span>
-                      <span class="pill" style="background:#ede9fe; color:#6d28d9; font-size:11px;">复仇高潮</span>
-                    </label>
-                  </div>
-                  <div style="display:flex; justify-content:flex-end; margin-top:8px;">
-                    <button class="btn btn-primary" style="font-size:12px;" onclick="addSelectedPlots()">添加所选</button>
-                  </div>
-                </div>
-              </div>
-            </div>
-            <div id="lk-cta" class="link-input-block" style="display:none;">
-              <label style="font-size:12px; color:#334155; font-weight:500; display:block; margin-bottom:4px;">行动号召 CTA 文案</label>
-              <input placeholder="输入引导文案，如：点击下方立即观看完整剧集" style="width:100%; border:1px solid #e2e8f0; border-radius:6px; padding:8px 10px; font-size:13px; box-sizing:border-box;">
-            </div>
-            <div id="lk-outro" class="link-input-block" style="display:none;">
-              <label style="font-size:12px; color:#334155; font-weight:500; display:block; margin-bottom:4px;">片尾引导内容</label>
-              <input placeholder="输入片尾引导文案 / 追更提示，如：关注不迷路，每晚8点更新" style="width:100%; border:1px solid #e2e8f0; border-radius:6px; padding:8px 10px; font-size:13px; box-sizing:border-box;">
-            </div>
-            <div id="lk-fx" class="link-input-block" style="display:none;">
-              <label style="font-size:12px; color:#334155; font-weight:500; display:block; margin-bottom:4px;">转场特效</label>
-              <select style="width:100%; font-size:13px; border:1px solid #e2e8f0; border-radius:6px; padding:8px 10px; color:#334155; box-sizing:border-box;">
-                <option>默认淡入淡出</option>
-                <option>快切冲击</option>
-                <option>故障风格 Glitch</option>
-                <option>光效扫描</option>
-                <option>缩放推进</option>
-              </select>
-            </div>
-          </div>
-
-          <div style="margin-top:12px; display:flex; align-items:center; gap:10px;">
-            <label style="font-size:12px; color:#64748b;">衔接工作流：</label>
-            <select style="font-size:12px; border:1px solid #e2e8f0; border-radius:6px; padding:6px 10px; color:#334155;">
-              <option>标准短剧成片流程</option>
-              <option>快投轻量流程</option>
-              <option>高转化长版流程</option>
-              <option>自定义工作流…</option>
-            </select>
-            <span style="font-size:12px; color:#94a3b8;">裂变前贴生成后将自动流转至「素材生成任务」</span>
-          </div>
-        </div>
       </div>
       </div><!-- /裂变方式+裂变参数 同排 -->
 
@@ -2334,7 +2253,7 @@ tbody tr:hover { background: #f8fafc; }
           <tbody>
             <tr>
               <td><div class="checkbox"></div></td>
-              <td><div class="thumb" style="background:linear-gradient(135deg,#e879f9,#a21caf);"></div></td>
+              <td><div class="thumb" style="background:linear-gradient(135deg,#e879f9,#a21caf); cursor:pointer;" onclick="openFissionPreview('霸总归来_换脸v4_甜美型')"></div></td>
               <td style="font-weight:500;">霸总归来_换脸v4_甜美型</td>
               <td><span class="pill pill-method">换脸</span></td>
               <td><a class="seed-link">霸总归来_开场1</a></td>
@@ -2342,13 +2261,14 @@ tbody tr:hover { background: #f8fafc; }
               <td style="color:#94a3b8;">07-09 14:32</td>
               <td><span class="fission-result-status fs-done">● 已完成</span></td>
               <td>
-                <button class="btn btn-outline" style="padding:4px 8px; font-size:11px;">预览</button>
+                <button class="btn btn-outline" style="padding:4px 8px; font-size:11px;" onclick="openFissionPreview('霸总归来_换脸v4_甜美型')">预览</button>
+                <button class="btn btn-outline" style="padding:4px 8px; font-size:11px;" onclick="openPostlink('霸总归来_换脸v4_甜美型')">指定后链路</button>
                 <button class="btn btn-success" style="padding:4px 8px; font-size:11px;">推送</button>
               </td>
             </tr>
             <tr>
               <td><div class="checkbox"></div></td>
-              <td><div class="thumb" style="background:linear-gradient(135deg,#c084fc,#7c3aed);"></div></td>
+              <td><div class="thumb" style="background:linear-gradient(135deg,#c084fc,#7c3aed); cursor:pointer;" onclick="openFissionPreview('霸总归来_换脸v5_御姐型')"></div></td>
               <td style="font-weight:500;">霸总归来_换脸v5_御姐型</td>
               <td><span class="pill pill-method">换脸</span></td>
               <td><a class="seed-link">霸总归来_开场1</a></td>
@@ -2356,13 +2276,14 @@ tbody tr:hover { background: #f8fafc; }
               <td style="color:#94a3b8;">07-09 14:32</td>
               <td><span class="fission-result-status fs-done">● 已完成</span></td>
               <td>
-                <button class="btn btn-outline" style="padding:4px 8px; font-size:11px;">预览</button>
+                <button class="btn btn-outline" style="padding:4px 8px; font-size:11px;" onclick="openFissionPreview('霸总归来_换脸v5_御姐型')">预览</button>
+                <button class="btn btn-outline" style="padding:4px 8px; font-size:11px;" onclick="openPostlink('霸总归来_换脸v5_御姐型')">指定后链路</button>
                 <button class="btn btn-success" style="padding:4px 8px; font-size:11px;">推送</button>
               </td>
             </tr>
             <tr>
               <td><div class="checkbox"></div></td>
-              <td><div class="thumb" style="background:linear-gradient(135deg,#60a5fa,#2563eb);"></div></td>
+              <td><div class="thumb" style="background:linear-gradient(135deg,#60a5fa,#2563eb); cursor:pointer;" onclick="openFissionPreview('霸总归来_框架_商战版A')"></div></td>
               <td style="font-weight:500;">霸总归来_框架_商战版A</td>
               <td><span class="pill" style="background:#e0e7ff; color:#4338ca;">框架复用</span></td>
               <td><a class="seed-link">霸总归来_开场1</a></td>
@@ -2370,13 +2291,14 @@ tbody tr:hover { background: #f8fafc; }
               <td style="color:#94a3b8;">07-09 13:18</td>
               <td><span class="fission-result-status fs-done">● 已完成</span></td>
               <td>
-                <button class="btn btn-outline" style="padding:4px 8px; font-size:11px;">预览</button>
+                <button class="btn btn-outline" style="padding:4px 8px; font-size:11px;" onclick="openFissionPreview('霸总归来_框架_商战版A')">预览</button>
+                <button class="btn btn-outline" style="padding:4px 8px; font-size:11px;" onclick="openPostlink('霸总归来_框架_商战版A')">指定后链路</button>
                 <button class="btn btn-success" style="padding:4px 8px; font-size:11px;">推送</button>
               </td>
             </tr>
             <tr>
               <td><div class="checkbox"></div></td>
-              <td><div class="thumb" style="background:linear-gradient(135deg,#fbbf24,#d97706);"></div></td>
+              <td><div class="thumb" style="background:linear-gradient(135deg,#fbbf24,#d97706); cursor:pointer;" onclick="openFissionPreview('霸总归来_混剪_高燃节奏版')"></div></td>
               <td style="font-weight:500;">霸总归来_混剪_高燃节奏版</td>
               <td><span class="pill" style="background:#fef3c7; color:#d97706;">混剪重组</span></td>
               <td><a class="seed-link">霸总归来_开场1</a></td>
@@ -2384,13 +2306,14 @@ tbody tr:hover { background: #f8fafc; }
               <td style="color:#94a3b8;">07-09 12:45</td>
               <td><span class="fission-result-status fs-pushed">● 已推送</span></td>
               <td>
-                <button class="btn btn-outline" style="padding:4px 8px; font-size:11px;">预览</button>
+                <button class="btn btn-outline" style="padding:4px 8px; font-size:11px;" onclick="openFissionPreview('霸总归来_混剪_高燃节奏版')">预览</button>
+                <button class="btn btn-outline" style="padding:4px 8px; font-size:11px;" onclick="openPostlink('霸总归来_混剪_高燃节奏版')">指定后链路</button>
                 <button class="btn btn-outline" style="padding:4px 8px; font-size:11px; opacity:.5;" disabled>已推送</button>
               </td>
             </tr>
             <tr>
               <td><div class="checkbox"></div></td>
-              <td><div class="thumb" style="background:linear-gradient(135deg,#34d399,#059669);"></div></td>
+              <td><div class="thumb" style="background:linear-gradient(135deg,#34d399,#059669); cursor:pointer;" onclick="openFissionPreview('霸总归来_脚本_悬疑视角')"></div></td>
               <td style="font-weight:500;">霸总归来_脚本_悬疑视角</td>
               <td><span class="pill" style="background:#d1fae5; color:#059669;">脚本裂变</span></td>
               <td><a class="seed-link">霸总归来_开场1</a></td>
@@ -2398,13 +2321,14 @@ tbody tr:hover { background: #f8fafc; }
               <td style="color:#94a3b8;">07-09 11:30</td>
               <td><span class="fission-result-status fs-done">● 已完成</span></td>
               <td>
-                <button class="btn btn-outline" style="padding:4px 8px; font-size:11px;">预览</button>
+                <button class="btn btn-outline" style="padding:4px 8px; font-size:11px;" onclick="openFissionPreview('霸总归来_脚本_悬疑视角')">预览</button>
+                <button class="btn btn-outline" style="padding:4px 8px; font-size:11px;" onclick="openPostlink('霸总归来_脚本_悬疑视角')">指定后链路</button>
                 <button class="btn btn-success" style="padding:4px 8px; font-size:11px;">推送</button>
               </td>
             </tr>
             <tr>
               <td><div class="checkbox"></div></td>
-              <td><div class="thumb" style="background:linear-gradient(135deg,#f472b6,#db2777);"></div></td>
+              <td><div class="thumb" style="background:linear-gradient(135deg,#f472b6,#db2777); cursor:pointer;" onclick="openFissionPreview('霸总归来_特效_震撼开场')"></div></td>
               <td style="font-weight:500;">霸总归来_特效_震撼开场</td>
               <td><span class="pill" style="background:#fce7f3; color:#be185d;">特效增强</span></td>
               <td><a class="seed-link">霸总归来_开场1</a></td>
@@ -2413,12 +2337,13 @@ tbody tr:hover { background: #f8fafc; }
               <td><span class="fission-result-status fs-generating">◌ 生成中</span></td>
               <td>
                 <button class="btn btn-outline" style="padding:4px 8px; font-size:11px; opacity:.5;" disabled>预览</button>
+                <button class="btn btn-outline" style="padding:4px 8px; font-size:11px; opacity:.5;" disabled>指定后链路</button>
                 <button class="btn btn-outline" style="padding:4px 8px; font-size:11px; opacity:.5;" disabled>推送</button>
               </td>
             </tr>
             <tr>
               <td><div class="checkbox"></div></td>
-              <td><div class="thumb" style="background:linear-gradient(135deg,#fb923c,#ea580c);"></div></td>
+              <td><div class="thumb" style="background:linear-gradient(135deg,#fb923c,#ea580c); cursor:pointer;" onclick="openFissionPreview('霸总归来_本地化_粤语版')"></div></td>
               <td style="font-weight:500;">霸总归来_本地化_粤语版</td>
               <td><span class="pill" style="background:#ffedd5; color:#c2410c;">本地化适配</span></td>
               <td><a class="seed-link">霸总归来_开场1</a></td>
@@ -2426,13 +2351,14 @@ tbody tr:hover { background: #f8fafc; }
               <td style="color:#94a3b8;">07-09 10:50</td>
               <td><span class="fission-result-status fs-done">● 已完成</span></td>
               <td>
-                <button class="btn btn-outline" style="padding:4px 8px; font-size:11px;">预览</button>
+                <button class="btn btn-outline" style="padding:4px 8px; font-size:11px;" onclick="openFissionPreview('霸总归来_本地化_粤语版')">预览</button>
+                <button class="btn btn-outline" style="padding:4px 8px; font-size:11px;" onclick="openPostlink('霸总归来_本地化_粤语版')">指定后链路</button>
                 <button class="btn btn-success" style="padding:4px 8px; font-size:11px;">推送</button>
               </td>
             </tr>
             <tr>
               <td><div class="checkbox"></div></td>
-              <td><div class="thumb" style="background:linear-gradient(135deg,#94a3b8,#475569);"></div></td>
+              <td><div class="thumb" style="background:linear-gradient(135deg,#94a3b8,#475569); cursor:pointer;" onclick="openFissionPreview('霸总归来_互动_投票版')"></div></td>
               <td style="font-weight:500;">霸总归来_互动_投票版</td>
               <td><span class="pill" style="background:#e0f2fe; color:#0369a1;">互动衍生</span></td>
               <td><a class="seed-link">霸总归来_开场1</a></td>
@@ -2446,7 +2372,7 @@ tbody tr:hover { background: #f8fafc; }
             </tr>
             <tr>
               <td><div class="checkbox"></div></td>
-              <td><div class="thumb" style="background:linear-gradient(135deg,#a78bfa,#6d28d9);"></div></td>
+              <td><div class="thumb" style="background:linear-gradient(135deg,#a78bfa,#6d28d9); cursor:pointer;" onclick="openFissionPreview('霸总归来_形态_竖版9:16')"></div></td>
               <td style="font-weight:500;">霸总归来_形态_竖版9:16</td>
               <td><span class="pill" style="background:#ede9fe; color:#6d28d9;">形态裂变</span></td>
               <td><a class="seed-link">霸总归来_开场1</a></td>
@@ -2454,13 +2380,14 @@ tbody tr:hover { background: #f8fafc; }
               <td style="color:#94a3b8;">07-09 10:10</td>
               <td><span class="fission-result-status fs-pushed">● 已推送</span></td>
               <td>
-                <button class="btn btn-outline" style="padding:4px 8px; font-size:11px;">预览</button>
+                <button class="btn btn-outline" style="padding:4px 8px; font-size:11px;" onclick="openFissionPreview('霸总归来_形态_竖版9:16')">预览</button>
+                <button class="btn btn-outline" style="padding:4px 8px; font-size:11px;" onclick="openPostlink('霸总归来_形态_竖版9:16')">指定后链路</button>
                 <button class="btn btn-outline" style="padding:4px 8px; font-size:11px; opacity:.5;" disabled>已推送</button>
               </td>
             </tr>
             <tr>
               <td><div class="checkbox"></div></td>
-              <td><div class="thumb" style="background:linear-gradient(135deg,#818cf8,#4f46e5);"></div></td>
+              <td><div class="thumb" style="background:linear-gradient(135deg,#818cf8,#4f46e5); cursor:pointer;" onclick="openFissionPreview('霸总归来_复刻_新演绎v1')"></div></td>
               <td style="font-weight:500;">霸总归来_复刻_新演绎v1</td>
               <td><span class="pill" style="background:#e0e7ff; color:#3730a3;">创意复刻</span></td>
               <td><a class="seed-link">霸总归来_开场1</a></td>
@@ -2469,6 +2396,7 @@ tbody tr:hover { background: #f8fafc; }
               <td><span class="fission-result-status fs-generating">◌ 生成中</span></td>
               <td>
                 <button class="btn btn-outline" style="padding:4px 8px; font-size:11px; opacity:.5;" disabled>预览</button>
+                <button class="btn btn-outline" style="padding:4px 8px; font-size:11px; opacity:.5;" disabled>指定后链路</button>
                 <button class="btn btn-outline" style="padding:4px 8px; font-size:11px; opacity:.5;" disabled>推送</button>
               </td>
             </tr>
@@ -3081,12 +3009,372 @@ tbody tr:hover { background: #f8fafc; }
       </div><!-- /fission-task -->
     </div>
 
+    <!-- ==================== 模块：数据资产管理 ==================== -->
+    <div class="module" id="module-data">
+      <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:20px;">
+        <div>
+          <h1 style="font-size:20px; font-weight:700; color:#1e293b; margin:0;">数据资产管理</h1>
+          <p style="font-size:13px; color:#94a3b8; margin:6px 0 0;">结构化沉淀人物 / 场景 / 服饰 / 道具 / 风格五大资产，供 AI 生成与裂变复用</p>
+        </div>
+        <div style="display:flex; gap:8px;">
+          <button class="btn btn-outline">导入资产库</button>
+          <button class="btn btn-primary" onclick="showModal('asset-add-modal')">+ 新增资产</button>
+        </div>
+      </div>
+
+      <!-- KPI -->
+      <div style="display:grid; grid-template-columns:repeat(5,1fr); gap:16px; margin-bottom:20px;">
+        <div class="kpi-card"><div class="value">128</div><div class="label">人物资产</div><div class="sub">含骨骼绑定 96</div></div>
+        <div class="kpi-card"><div class="value">86</div><div class="label">场景资产</div><div class="sub">PBR 材质 74</div></div>
+        <div class="kpi-card"><div class="value">154</div><div class="label">服饰资产</div><div class="sub">动力学参数 132</div></div>
+        <div class="kpi-card"><div class="value">203</div><div class="label">道具资产</div><div class="sub">可动件 88</div></div>
+        <div class="kpi-card"><div class="value">42</div><div class="label">风格资产</div><div class="sub">LUT 预设 42</div></div>
+      </div>
+
+      <!-- 资产类型切换 -->
+      <div class="tab-bar" id="asset-type-tabs">
+        <div class="tab-item active" onclick="switchAssetType(this,'person')">人物</div>
+        <div class="tab-item" onclick="switchAssetType(this,'scene')">场景</div>
+        <div class="tab-item" onclick="switchAssetType(this,'costume')">服饰</div>
+        <div class="tab-item" onclick="switchAssetType(this,'prop')">道具</div>
+        <div class="tab-item" onclick="switchAssetType(this,'style')">风格</div>
+      </div>
+
+      <!-- 二级分类筛选 -->
+      <div class="filter-group" id="asset-subcat-bar" style="margin-bottom:14px;">
+        <span class="filter-label" style="margin-right:2px;">细分：</span>
+        <span class="filter-pill active" onclick="filterAssetCat(this,'全部')">全部</span>
+        <span class="filter-pill" onclick="filterAssetCat(this,'男')">男</span>
+        <span class="filter-pill" onclick="filterAssetCat(this,'女')">女</span>
+        <span class="filter-pill" onclick="filterAssetCat(this,'老')">老</span>
+        <span class="filter-pill" onclick="filterAssetCat(this,'幼')">幼</span>
+        <span class="filter-pill" onclick="filterAssetCat(this,'古代')">古代</span>
+        <span class="filter-pill" onclick="filterAssetCat(this,'现代')">现代</span>
+      </div>
+
+      <!-- 筛选栏 -->
+      <div class="card-section" style="padding:14px 20px; margin-bottom:16px;">
+        <div class="filter-row">
+          <input class="search-input" placeholder="搜索资产名称 / ID / 标签…" style="width:280px;">
+          <span class="filter-label">完整度</span>
+          <select class="filter-select"><option>全部</option><option>已完善</option><option>待补充</option></select>
+          <span class="filter-label">来源</span>
+          <select class="filter-select"><option>全部来源</option><option>人工建模</option><option>AI 生成</option><option>外部导入</option></select>
+          <div style="margin-left:auto; display:flex; gap:8px;">
+            <button class="btn btn-outline" style="font-size:12px;">批量导出</button>
+            <button class="btn btn-outline" style="font-size:12px;">刷新</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- ===== 人物资产 ===== -->
+      <div class="asset-panel" id="asset-panel-person">
+        <div class="asset-grid">
+          <div class="asset-card" data-cat="女 现代" onclick="showAssetDetail('p_su')">
+            <div class="asset-thumb" style="background:linear-gradient(135deg,#a78bfa,#7c3aed);">🧑‍🦰<span class="asset-type-badge">女·现代</span><span class="asset-id">PER-0821</span></div>
+            <div class="asset-body">
+              <div class="asset-name">苏若曦 · 女主</div>
+              <div class="asset-meta">椭圆脸 · 丹凤眼 · 35岁 · 168cm</div>
+              <div class="asset-tags"><span class="asset-tag">生物特征</span><span class="asset-tag">6视角</span><span class="asset-tag">FACS</span><span class="asset-tag">骨骼绑定</span></div>
+            </div>
+            <div class="asset-footer"><span class="asset-ver">v3 · 完整度 95%</span><span class="seed-link">查看详情 ›</span></div>
+          </div>
+          <div class="asset-card" data-cat="男 现代" onclick="showAssetDetail('p_ceo')">
+            <div class="asset-thumb" style="background:linear-gradient(135deg,#60a5fa,#2563eb);">🧔<span class="asset-type-badge">男·现代</span><span class="asset-id">PER-0644</span></div>
+            <div class="asset-body">
+              <div class="asset-name">霸道总裁 · 男主</div>
+              <div class="asset-meta">方圆脸 · 高眉骨 · 32岁 · 185cm</div>
+              <div class="asset-tags"><span class="asset-tag">SSS 皮下散射</span><span class="asset-tag">发色渐变</span><span class="asset-tag">微表情</span></div>
+            </div>
+            <div class="asset-footer"><span class="asset-ver">v2 · 完整度 88%</span><span class="seed-link">查看详情 ›</span></div>
+          </div>
+          <div class="asset-card" data-cat="女 现代" onclick="showAssetDetail('p_villain')">
+            <div class="asset-thumb" style="background:linear-gradient(135deg,#f472b6,#db2777);">👩<span class="asset-type-badge">女·现代</span><span class="asset-id">PER-0512</span></div>
+            <div class="asset-body">
+              <div class="asset-name">恶毒女配 · 反派</div>
+              <div class="asset-meta">倒三角脸 · 下垂眼 · 28岁 · 172cm</div>
+              <div class="asset-tags"><span class="asset-tag">雀斑纹理</span><span class="asset-tag">痣坐标</span><span class="asset-tag">待补充</span></div>
+            </div>
+            <div class="asset-footer"><span class="asset-ver">v1 · 完整度 62%</span><span class="seed-link">查看详情 ›</span></div>
+          </div>
+          <div class="asset-card" data-cat="男 老 现代" onclick="showAssetDetail('p_old')">
+            <div class="asset-thumb" style="background:linear-gradient(135deg,#34d399,#059669);">👴<span class="asset-type-badge">男·老</span><span class="asset-id">PER-0399</span></div>
+            <div class="asset-body">
+              <div class="asset-name">家族老爷子 · 配角</div>
+              <div class="asset-meta">方圆脸 · 皱纹密度高 · 68岁 · 170cm</div>
+              <div class="asset-tags"><span class="asset-tag">皱纹密度</span><span class="asset-tag">疲劳度</span><span class="asset-tag">6视角</span></div>
+            </div>
+            <div class="asset-footer"><span class="asset-ver">v2 · 完整度 90%</span><span class="seed-link">查看详情 ›</span></div>
+          </div>
+          <div class="asset-card" data-cat="女 古代" onclick="showAssetDetail('p_xianv')">
+            <div class="asset-thumb" style="background:linear-gradient(135deg,#f0abfc,#a21caf);">🧝‍♀️<span class="asset-type-badge">女·古代</span><span class="asset-id">PER-0288</span></div>
+            <div class="asset-body">
+              <div class="asset-name">江湖侠女 · 女主</div>
+              <div class="asset-meta">鹅蛋脸 · 桃花眼 · 24岁 · 165cm</div>
+              <div class="asset-tags"><span class="asset-tag">古风发髻</span><span class="asset-tag">6视角</span><span class="asset-tag">骨骼绑定</span></div>
+            </div>
+            <div class="asset-footer"><span class="asset-ver">v2 · 完整度 91%</span><span class="seed-link">查看详情 ›</span></div>
+          </div>
+          <div class="asset-card" data-cat="男 古代" onclick="showAssetDetail('p_general')">
+            <div class="asset-thumb" style="background:linear-gradient(135deg,#fca5a5,#b91c1c);">🤴<span class="asset-type-badge">男·古代</span><span class="asset-id">PER-0256</span></div>
+            <div class="asset-body">
+              <div class="asset-name">少年将军 · 男主</div>
+              <div class="asset-meta">方圆脸 · 剑眉 · 26岁 · 183cm</div>
+              <div class="asset-tags"><span class="asset-tag">束发冠</span><span class="asset-tag">微表情</span><span class="asset-tag">骨骼绑定</span></div>
+            </div>
+            <div class="asset-footer"><span class="asset-ver">v3 · 完整度 93%</span><span class="seed-link">查看详情 ›</span></div>
+          </div>
+          <div class="asset-card" data-cat="女 老 古代" onclick="showAssetDetail('p_taijun')">
+            <div class="asset-thumb" style="background:linear-gradient(135deg,#d8b4fe,#7e22ce);">👵<span class="asset-type-badge">女·老·古代</span><span class="asset-id">PER-0201</span></div>
+            <div class="asset-body">
+              <div class="asset-name">相府老太君 · 配角</div>
+              <div class="asset-meta">方圆脸 · 皱纹密度高 · 72岁 · 158cm</div>
+              <div class="asset-tags"><span class="asset-tag">皱纹密度</span><span class="asset-tag">古风头面</span><span class="asset-tag">待补充</span></div>
+            </div>
+            <div class="asset-footer"><span class="asset-ver">v1 · 完整度 68%</span><span class="seed-link">查看详情 ›</span></div>
+          </div>
+          <div class="asset-card" data-cat="女 幼 现代" onclick="showAssetDetail('p_girl')">
+            <div class="asset-thumb" style="background:linear-gradient(135deg,#fda4af,#e11d48);">👧<span class="asset-type-badge">女·幼</span><span class="asset-id">PER-0177</span></div>
+            <div class="asset-body">
+              <div class="asset-name">天才童星 · 女童</div>
+              <div class="asset-meta">圆脸 · 大眼 · 7岁 · 122cm</div>
+              <div class="asset-tags"><span class="asset-tag">童声匹配</span><span class="asset-tag">6视角</span><span class="asset-tag">骨骼绑定</span></div>
+            </div>
+            <div class="asset-footer"><span class="asset-ver">v2 · 完整度 86%</span><span class="seed-link">查看详情 ›</span></div>
+          </div>
+          <div class="asset-card" data-cat="男 幼 古代" onclick="showAssetDetail('p_boy')">
+            <div class="asset-thumb" style="background:linear-gradient(135deg,#93c5fd,#1d4ed8);">👦<span class="asset-type-badge">男·幼·古代</span><span class="asset-id">PER-0152</span></div>
+            <div class="asset-body">
+              <div class="asset-name">古代书童 · 男童</div>
+              <div class="asset-meta">圆脸 · 杏眼 · 9岁 · 130cm</div>
+              <div class="asset-tags"><span class="asset-tag">总角发髻</span><span class="asset-tag">微表情</span><span class="asset-tag">待补充</span></div>
+            </div>
+            <div class="asset-footer"><span class="asset-ver">v1 · 完整度 64%</span><span class="seed-link">查看详情 ›</span></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ===== 场景资产 ===== -->
+      <div class="asset-panel" id="asset-panel-scene" style="display:none;">
+        <div class="asset-grid">
+          <div class="asset-card" data-cat="现代" onclick="showAssetDetail('s_office')">
+            <div class="asset-thumb" style="background:linear-gradient(135deg,#818cf8,#4f46e5);">🏙️<span class="asset-type-badge">现代</span><span class="asset-id">SCN-0203</span></div>
+            <div class="asset-body">
+              <div class="asset-name">顶层豪华办公室</div>
+              <div class="asset-meta">室内 · 层高 3.6m · 5600K 日光</div>
+              <div class="asset-tags"><span class="asset-tag">建筑拓扑</span><span class="asset-tag">PBR材质</span><span class="asset-tag">光照预设</span></div>
+            </div>
+            <div class="asset-footer"><span class="asset-ver">v4 · 完整度 96%</span><span class="seed-link">查看详情 ›</span></div>
+          </div>
+          <div class="asset-card" data-cat="现代" onclick="showAssetDetail('s_rooftop')">
+            <div class="asset-thumb" style="background:linear-gradient(135deg,#fbbf24,#d97706);">🌆<span class="asset-type-badge">现代</span><span class="asset-id">SCN-0177</span></div>
+            <div class="asset-body">
+              <div class="asset-name">黄昏天台</div>
+              <div class="asset-meta">室外 · 晨昏渐变 · 2700K 暖光</div>
+              <div class="asset-tags"><span class="asset-tag">天气参数</span><span class="asset-tag">日影轨迹</span><span class="asset-tag">粒子</span></div>
+            </div>
+            <div class="asset-footer"><span class="asset-ver">v2 · 完整度 84%</span><span class="seed-link">查看详情 ›</span></div>
+          </div>
+          <div class="asset-card" data-cat="古代" onclick="showAssetDetail('s_watertown')">
+            <div class="asset-thumb" style="background:linear-gradient(135deg,#22d3ee,#0891b2);">🏞️<span class="asset-type-badge">古代</span><span class="asset-id">SCN-0141</span></div>
+            <div class="asset-body">
+              <div class="asset-name">江南古镇水巷</div>
+              <div class="asset-meta">室外 · 水体反射 · 雾气浓度中</div>
+              <div class="asset-tags"><span class="asset-tag">地形高度图</span><span class="asset-tag">IOR折射</span><span class="asset-tag">植被密度</span></div>
+            </div>
+            <div class="asset-footer"><span class="asset-ver">v1 · 完整度 70%</span><span class="seed-link">查看详情 ›</span></div>
+          </div>
+          <div class="asset-card" data-cat="古代" onclick="showAssetDetail('s_palace')">
+            <div class="asset-thumb" style="background:linear-gradient(135deg,#fca5a5,#b91c1c);">🏯<span class="asset-type-badge">古代</span><span class="asset-id">SCN-0118</span></div>
+            <div class="asset-body">
+              <div class="asset-name">皇宫金銮殿</div>
+              <div class="asset-meta">室内 · 层高 9.0m · 烛光暖调</div>
+              <div class="asset-tags"><span class="asset-tag">建筑拓扑</span><span class="asset-tag">PBR材质</span><span class="asset-tag">光照预设</span></div>
+            </div>
+            <div class="asset-footer"><span class="asset-ver">v3 · 完整度 92%</span><span class="seed-link">查看详情 ›</span></div>
+          </div>
+          <div class="asset-card" data-cat="古代" onclick="showAssetDetail('s_inn')">
+            <div class="asset-thumb" style="background:linear-gradient(135deg,#fdba74,#c2410c);">🏮<span class="asset-type-badge">古代</span><span class="asset-id">SCN-0096</span></div>
+            <div class="asset-body">
+              <div class="asset-name">古镇客栈大堂</div>
+              <div class="asset-meta">室内 · 层高 4.2m · 灯笼暖光</div>
+              <div class="asset-tags"><span class="asset-tag">动线通道</span><span class="asset-tag">粒子</span><span class="asset-tag">待补充</span></div>
+            </div>
+            <div class="asset-footer"><span class="asset-ver">v1 · 完整度 66%</span><span class="seed-link">查看详情 ›</span></div>
+          </div>
+          <div class="asset-card" data-cat="现代" onclick="showAssetDetail('s_cafe')">
+            <div class="asset-thumb" style="background:linear-gradient(135deg,#6ee7b7,#047857);">☕<span class="asset-type-badge">现代</span><span class="asset-id">SCN-0072</span></div>
+            <div class="asset-body">
+              <div class="asset-name">网红咖啡馆</div>
+              <div class="asset-meta">室内 · 层高 3.0m · 4000K 中性光</div>
+              <div class="asset-tags"><span class="asset-tag">PBR材质</span><span class="asset-tag">环境光遮蔽</span><span class="asset-tag">光照预设</span></div>
+            </div>
+            <div class="asset-footer"><span class="asset-ver">v2 · 完整度 88%</span><span class="seed-link">查看详情 ›</span></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ===== 服饰资产 ===== -->
+      <div class="asset-panel" id="asset-panel-costume" style="display:none;">
+        <div class="asset-grid">
+          <div class="asset-card" data-cat="现代" onclick="showAssetDetail('c_gown')">
+            <div class="asset-thumb" style="background:linear-gradient(135deg,#f87171,#dc2626);">👗<span class="asset-type-badge">现代</span><span class="asset-id">CLO-0455</span></div>
+            <div class="asset-body">
+              <div class="asset-name">红色高定晚礼服</div>
+              <div class="asset-meta">X型廓形 · 长裙 · 高垂坠</div>
+              <div class="asset-tags"><span class="asset-tag">动力学</span><span class="asset-tag">刺绣单元</span><span class="asset-tag">褶皱图</span></div>
+            </div>
+            <div class="asset-footer"><span class="asset-ver">v3 · 完整度 92%</span><span class="seed-link">查看详情 ›</span></div>
+          </div>
+          <div class="asset-card" data-cat="现代" onclick="showAssetDetail('c_suit')">
+            <div class="asset-thumb" style="background:linear-gradient(135deg,#94a3b8,#475569);">🤵<span class="asset-type-badge">现代</span><span class="asset-id">CLO-0388</span></div>
+            <div class="asset-body">
+              <div class="asset-name">深灰三件套西装</div>
+              <div class="asset-meta">H型廓形 · 三层穿叠 · 中厚面料</div>
+              <div class="asset-tags"><span class="asset-tag">层叠关系</span><span class="asset-tag">纽扣反光</span><span class="asset-tag">弹性模量</span></div>
+            </div>
+            <div class="asset-footer"><span class="asset-ver">v2 · 完整度 89%</span><span class="seed-link">查看详情 ›</span></div>
+          </div>
+          <div class="asset-card" data-cat="古代" onclick="showAssetDetail('c_ruqun')">
+            <div class="asset-thumb" style="background:linear-gradient(135deg,#c084fc,#9333ea);">🥻<span class="asset-type-badge">古代</span><span class="asset-id">CLO-0301</span></div>
+            <div class="asset-body">
+              <div class="asset-name">唐制齐胸襦裙</div>
+              <div class="asset-meta">A型廓形 · 宝相花提花 · 高开衩</div>
+              <div class="asset-tags"><span class="asset-tag">文化标识</span><span class="asset-tag">提花矢量</span><span class="asset-tag">待补充</span></div>
+            </div>
+            <div class="asset-footer"><span class="asset-ver">v1 · 完整度 66%</span><span class="seed-link">查看详情 ›</span></div>
+          </div>
+          <div class="asset-card" data-cat="古代" onclick="showAssetDetail('c_armor')">
+            <div class="asset-thumb" style="background:linear-gradient(135deg,#fbbf24,#a16207);">🛡️<span class="asset-type-badge">古代</span><span class="asset-id">CLO-0277</span></div>
+            <div class="asset-body">
+              <div class="asset-name">明光将军铠甲</div>
+              <div class="asset-meta">H型廓形 · 甲片层叠 · 高刚度</div>
+              <div class="asset-tags"><span class="asset-tag">层叠关系</span><span class="asset-tag">金属反光</span><span class="asset-tag">铆钉排列</span></div>
+            </div>
+            <div class="asset-footer"><span class="asset-ver">v3 · 完整度 90%</span><span class="seed-link">查看详情 ›</span></div>
+          </div>
+          <div class="asset-card" data-cat="古代" onclick="showAssetDetail('c_changpao')">
+            <div class="asset-thumb" style="background:linear-gradient(135deg,#5eead4,#0f766e);">👘<span class="asset-type-badge">古代</span><span class="asset-id">CLO-0233</span></div>
+            <div class="asset-body">
+              <div class="asset-name">书生青衫长袍</div>
+              <div class="asset-meta">A型廓形 · 交领右衽 · 高垂坠</div>
+              <div class="asset-tags"><span class="asset-tag">动力学</span><span class="asset-tag">褶皱图</span><span class="asset-tag">待补充</span></div>
+            </div>
+            <div class="asset-footer"><span class="asset-ver">v1 · 完整度 63%</span><span class="seed-link">查看详情 ›</span></div>
+          </div>
+          <div class="asset-card" data-cat="现代" onclick="showAssetDetail('c_street')">
+            <div class="asset-thumb" style="background:linear-gradient(135deg,#fca5a5,#e11d48);">🧥<span class="asset-type-badge">现代</span><span class="asset-id">CLO-0198</span></div>
+            <div class="asset-body">
+              <div class="asset-name">潮牌机能夹克</div>
+              <div class="asset-meta">O型廓形 · 短款 · 硬挺面料</div>
+              <div class="asset-tags"><span class="asset-tag">拉链走向</span><span class="asset-tag">铆钉排列</span><span class="asset-tag">弹性模量</span></div>
+            </div>
+            <div class="asset-footer"><span class="asset-ver">v2 · 完整度 85%</span><span class="seed-link">查看详情 ›</span></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ===== 道具资产 ===== -->
+      <div class="asset-panel" id="asset-panel-prop" style="display:none;">
+        <div class="asset-grid">
+          <div class="asset-card" data-cat="古代" onclick="showAssetDetail('pr_sword')">
+            <div class="asset-thumb" style="background:linear-gradient(135deg,#fb923c,#ea580c);">⚔️<span class="asset-type-badge">古代</span><span class="asset-id">PRP-0620</span></div>
+            <div class="asset-body">
+              <div class="asset-name">古龙纹长剑</div>
+              <div class="asset-meta">主体+刀刃+手柄 · 做旧磨损</div>
+              <div class="asset-tags"><span class="asset-tag">零件拆解</span><span class="asset-tag">血渍角度</span><span class="asset-tag">特效锚点</span></div>
+            </div>
+            <div class="asset-footer"><span class="asset-ver">v3 · 完整度 94%</span><span class="seed-link">查看详情 ›</span></div>
+          </div>
+          <div class="asset-card" data-cat="现代" onclick="showAssetDetail('pr_phone')">
+            <div class="asset-thumb" style="background:linear-gradient(135deg,#38bdf8,#0284c7);">📱<span class="asset-type-badge">现代</span><span class="asset-id">PRP-0533</span></div>
+            <div class="asset-body">
+              <div class="asset-name">智能手机</div>
+              <div class="asset-meta">屏幕可交互 · 指纹划痕</div>
+              <div class="asset-tags"><span class="asset-tag">交互痕迹</span><span class="asset-tag">握持点位</span><span class="asset-tag">机械传动</span></div>
+            </div>
+            <div class="asset-footer"><span class="asset-ver">v2 · 完整度 87%</span><span class="seed-link">查看详情 ›</span></div>
+          </div>
+          <div class="asset-card" data-cat="现代" onclick="showAssetDetail('pr_glass')">
+            <div class="asset-thumb" style="background:linear-gradient(135deg,#a3e635,#65a30d);">🍷<span class="asset-type-badge">现代</span><span class="asset-id">PRP-0410</span></div>
+            <div class="asset-body">
+              <div class="asset-name">水晶红酒杯</div>
+              <div class="asset-meta">半透玻璃 · 水珠凝结 · IOR 1.52</div>
+              <div class="asset-tags"><span class="asset-tag">包浆程度</span><span class="asset-tag">凝结度</span><span class="asset-tag">发力角度</span></div>
+            </div>
+            <div class="asset-footer"><span class="asset-ver">v1 · 完整度 72%</span><span class="seed-link">查看详情 ›</span></div>
+          </div>
+          <div class="asset-card" data-cat="古代" onclick="showAssetDetail('pr_umbrella')">
+            <div class="asset-thumb" style="background:linear-gradient(135deg,#f9a8d4,#be185d);">🌂<span class="asset-type-badge">古代</span><span class="asset-id">PRP-0366</span></div>
+            <div class="asset-body">
+              <div class="asset-name">油纸伞</div>
+              <div class="asset-meta">可开合 · 伞骨联动 · 半透伞面</div>
+              <div class="asset-tags"><span class="asset-tag">机械传动</span><span class="asset-tag">零件拆解</span><span class="asset-tag">特效锚点</span></div>
+            </div>
+            <div class="asset-footer"><span class="asset-ver">v2 · 完整度 88%</span><span class="seed-link">查看详情 ›</span></div>
+          </div>
+          <div class="asset-card" data-cat="古代" onclick="showAssetDetail('pr_lantern')">
+            <div class="asset-thumb" style="background:linear-gradient(135deg,#fca5a5,#dc2626);">🏮<span class="asset-type-badge">古代</span><span class="asset-id">PRP-0322</span></div>
+            <div class="asset-body">
+              <div class="asset-name">宫灯</div>
+              <div class="asset-meta">发光道具 · 半透绢面 · 做旧</div>
+              <div class="asset-tags"><span class="asset-tag">特效锚点</span><span class="asset-tag">包浆程度</span><span class="asset-tag">待补充</span></div>
+            </div>
+            <div class="asset-footer"><span class="asset-ver">v1 · 完整度 69%</span><span class="seed-link">查看详情 ›</span></div>
+          </div>
+          <div class="asset-card" data-cat="现代" onclick="showAssetDetail('pr_car')">
+            <div class="asset-thumb" style="background:linear-gradient(135deg,#818cf8,#4338ca);">🚗<span class="asset-type-badge">现代</span><span class="asset-id">PRP-0288</span></div>
+            <div class="asset-body">
+              <div class="asset-name">豪华轿车</div>
+              <div class="asset-meta">车门可开 · 金属漆面 · 反光</div>
+              <div class="asset-tags"><span class="asset-tag">机械传动</span><span class="asset-tag">交互痕迹</span><span class="asset-tag">零件拆解</span></div>
+            </div>
+            <div class="asset-footer"><span class="asset-ver">v3 · 完整度 91%</span><span class="seed-link">查看详情 ›</span></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ===== 风格资产 ===== -->
+      <div class="asset-panel" id="asset-panel-style" style="display:none;">
+        <div class="asset-grid">
+          <div class="asset-card" onclick="showAssetDetail('st_cyber')">
+            <div class="asset-thumb" style="background:linear-gradient(135deg,#c026d3,#7c3aed);">🌃<span class="asset-type-badge">风格</span><span class="asset-id">STY-0088</span></div>
+            <div class="asset-body">
+              <div class="asset-name">赛博朋克 · 霓虹</div>
+              <div class="asset-meta">紫青霓虹 · 85mm · f1.8</div>
+              <div class="asset-tags"><span class="asset-tag">LUT预设</span><span class="asset-tag">炫光</span><span class="asset-tag">动态模糊</span></div>
+            </div>
+            <div class="asset-footer"><span class="asset-ver">v4 · 完整度 98%</span><span class="seed-link">查看详情 ›</span></div>
+          </div>
+          <div class="asset-card" onclick="showAssetDetail('st_film')">
+            <div class="asset-thumb" style="background:linear-gradient(135deg,#f43f5e,#be123c);">🎞️<span class="asset-type-badge">风格</span><span class="asset-id">STY-0061</span></div>
+            <div class="asset-body">
+              <div class="asset-name">复古胶片 · 电影感</div>
+              <div class="asset-meta">黑柔光 · 35mm · 胶片颗粒</div>
+              <div class="asset-tags"><span class="asset-tag">噪点颗粒</span><span class="asset-tag">色调分离</span><span class="asset-tag">柔光</span></div>
+            </div>
+            <div class="asset-footer"><span class="asset-ver">v2 · 完整度 90%</span><span class="seed-link">查看详情 ›</span></div>
+          </div>
+          <div class="asset-card" onclick="showAssetDetail('st_ink')">
+            <div class="asset-thumb" style="background:linear-gradient(135deg,#2dd4bf,#0d9488);">🖌️<span class="asset-type-badge">风格</span><span class="asset-id">STY-0044</span></div>
+            <div class="asset-body">
+              <div class="asset-name">国潮水墨</div>
+              <div class="asset-meta">水墨晕染 · 三分法构图</div>
+              <div class="asset-tags"><span class="asset-tag">笔触纹理</span><span class="asset-tag">晕染系数</span><span class="asset-tag">HSL区间</span></div>
+            </div>
+            <div class="asset-footer"><span class="asset-ver">v1 · 完整度 78%</span><span class="seed-link">查看详情 ›</span></div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
   </main>
 </div>
 
 <!-- ==================== 弹窗：新增种子前贴 ==================== -->
 <div class="modal-overlay" id="seed-add-modal">
-  <div class="modal-card">
+  <div class="modal-card" style="width:720px;">
     <h3>新增种子前贴</h3>
     <div style="display:flex; flex-direction:column; gap:14px;">
       <div>
@@ -3097,6 +3385,73 @@ tbody tr:hover { background: #f8fafc; }
         <label style="font-size:12px; color:#64748b; display:block; margin-bottom:4px;">上传视频</label>
         <div style="border:2px dashed #e2e8f0; border-radius:8px; padding:32px; text-align:center; color:#94a3b8; font-size:13px; cursor:pointer;">
           点击或拖拽上传视频文件<br><span style="font-size:11px;">支持 mp4/mov，最大 500MB</span>
+        </div>
+      </div>
+
+      <!-- 视频截取（与"通过并录入种子库"一致） -->
+      <div>
+        <label style="font-size:12px; color:#64748b; display:block; margin-bottom:6px;">视频截取</label>
+        <div style="display:flex; gap:20px;">
+          <!-- 左：视频预览 -->
+          <div style="flex-shrink:0; width:190px;">
+            <div style="width:190px; height:338px; border-radius:12px; background:linear-gradient(160deg,#a78bfa,#7c3aed); position:relative; overflow:hidden;">
+              <!-- 顶部信息 -->
+              <div style="position:absolute; top:10px; left:12px; right:12px; font-size:11px; color:rgba(255,255,255,.9); display:flex; justify-content:space-between;">
+                <span>竖屏 9:16</span><span id="seedcut-duration-top">00:15</span>
+              </div>
+              <!-- 播放按钮 -->
+              <div style="position:absolute; inset:0; display:flex; align-items:center; justify-content:center;">
+                <div style="width:54px; height:54px; border-radius:50%; background:rgba(255,255,255,.92); display:flex; align-items:center; justify-content:center; box-shadow:0 4px 14px rgba(0,0,0,.22); cursor:pointer;">
+                  <span style="color:#7c3aed; font-size:18px; margin-left:3px;">▶</span>
+                </div>
+              </div>
+              <!-- 底部进度条 -->
+              <div style="position:absolute; bottom:0; left:0; right:0; padding:12px;">
+                <div style="height:4px; border-radius:2px; background:rgba(255,255,255,.3); position:relative;">
+                  <div style="position:absolute; left:12%; right:15%; top:0; bottom:0; background:#fff; border-radius:2px;"></div>
+                </div>
+                <div style="display:flex; justify-content:space-between; font-size:10px; color:rgba(255,255,255,.92); margin-top:6px;">
+                  <span id="seedcut-pv-start">00:00</span>
+                  <span id="seedcut-pv-end">00:15</span>
+                </div>
+              </div>
+            </div>
+            <div style="font-size:11px; color:#94a3b8; margin-top:8px; text-align:center;">进度条白色区段为截取范围</div>
+          </div>
+
+          <!-- 右：截取配置 -->
+          <div style="flex:1; display:flex; flex-direction:column; gap:16px;">
+            <!-- 视频截取起始时间 -->
+            <div>
+              <label style="font-size:12px; color:#64748b; display:block; margin-bottom:6px;">视频截取起始时间 <span style="color:#ef4444;">*</span></label>
+              <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
+                <input id="seedcut-start" type="text" value="00:00" placeholder="mm:ss" style="width:96px; border:1px solid #e2e8f0; border-radius:8px; padding:8px 12px; font-size:13px; text-align:center;">
+                <span class="filter-pill active" onclick="document.getElementById('seedcut-start').value='00:00';document.getElementById('seedcut-pv-start').textContent='00:00'">00:00</span>
+                <span class="filter-pill" onclick="document.getElementById('seedcut-start').value='00:03';document.getElementById('seedcut-pv-start').textContent='00:03'">00:03</span>
+                <span class="filter-pill" onclick="document.getElementById('seedcut-start').value='00:05';document.getElementById('seedcut-pv-start').textContent='00:05'">00:05</span>
+              </div>
+            </div>
+
+            <!-- 视频截取截止时间 -->
+            <div>
+              <label style="font-size:12px; color:#64748b; display:block; margin-bottom:6px;">视频截取截止时间 <span style="color:#ef4444;">*</span></label>
+              <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
+                <input id="seedcut-end" type="text" value="00:15" placeholder="mm:ss" style="width:96px; border:1px solid #e2e8f0; border-radius:8px; padding:8px 12px; font-size:13px; text-align:center;">
+                <span class="filter-pill" onclick="document.getElementById('seedcut-end').value='00:10';document.getElementById('seedcut-pv-end').textContent='00:10'">00:10</span>
+                <span class="filter-pill active" onclick="document.getElementById('seedcut-end').value='00:15';document.getElementById('seedcut-pv-end').textContent='00:15'">00:15</span>
+                <span class="filter-pill" onclick="document.getElementById('seedcut-end').value='片尾';document.getElementById('seedcut-pv-end').textContent='片尾'">至片尾</span>
+              </div>
+              <!-- 时间轴示意（起始点 ~ 截止点） -->
+              <div style="margin-top:10px; height:36px; background:linear-gradient(90deg,#f1f5f9,#e2e8f0); border-radius:6px; position:relative; overflow:hidden;">
+                <div style="position:absolute; left:12%; right:15%; top:0; bottom:0; background:rgba(124,58,237,.15);"></div>
+                <div style="position:absolute; left:12%; top:0; bottom:0; width:2px; background:#7c3aed;"></div>
+                <div style="position:absolute; right:15%; top:0; bottom:0; width:2px; background:#7c3aed;"></div>
+                <div style="position:absolute; left:calc(12% + 4px); top:50%; transform:translateY(-50%); font-size:11px; color:#7c3aed; font-weight:500;">▶ 起始</div>
+                <div style="position:absolute; right:calc(15% + 4px); top:50%; transform:translateY(-50%); font-size:11px; color:#7c3aed; font-weight:500;">截止 ◀</div>
+              </div>
+              <div style="font-size:11px; color:#94a3b8; margin-top:4px;">截取起始点至截止点之间的片段作为种子前贴内容，用于去除片头空镜/水印及片尾引导等无效画面</div>
+            </div>
+          </div>
         </div>
       </div>
       <div>
@@ -3394,6 +3749,17 @@ tbody tr:hover { background: #f8fafc; }
     <h3>发起裂变任务</h3>
     <div style="display:flex; flex-direction:column; gap:16px;">
       <div>
+        <label style="font-size:12px; color:#64748b; display:block; margin-bottom:6px;">裂变模式</label>
+        <div style="display:flex; gap:16px;">
+          <label style="font-size:13px; color:#334155; display:flex; align-items:center; gap:5px; cursor:pointer;">
+            <input type="radio" name="modal-fission-mode" value="seed" checked onchange="switchModalFissionMode(this)"> 种子裂变
+          </label>
+          <label style="font-size:13px; color:#334155; display:flex; align-items:center; gap:5px; cursor:pointer;">
+            <input type="radio" name="modal-fission-mode" value="copy" onchange="switchModalFissionMode(this)"> 前贴文案裂变
+          </label>
+        </div>
+      </div>
+      <div id="modal-seed-block">
         <label style="font-size:12px; color:#64748b; display:block; margin-bottom:6px;">选择种子前贴</label>
         <select style="font-size:13px; border:1px solid #e2e8f0; border-radius:6px; padding:8px 12px; color:#334155; width:100%;">
           <option>霸总归来_开场1（都市·女频·15s）</option>
@@ -3401,6 +3767,16 @@ tbody tr:hover { background: #f8fafc; }
           <option>千金复仇_狠人版（都市·女频·18s）</option>
           <option>古言虐恋_雨夜逃（古言·女频·16s）</option>
           <option>重生商战_谈判篇（都市·男频·22s）</option>
+        </select>
+      </div>
+      <div id="modal-copy-block" style="display:none;">
+        <label style="font-size:12px; color:#64748b; display:block; margin-bottom:6px;">选择前贴文案</label>
+        <select style="font-size:13px; border:1px solid #e2e8f0; border-radius:6px; padding:8px 12px; color:#334155; width:100%;">
+          <option>「三年后我回来了」·逆袭爽感开场（都市·女频）</option>
+          <option>「你也配？」·打脸反转钩子（都市·男频）</option>
+          <option>「师父，我不学了」·玄幻叛逆开场（玄幻·男频）</option>
+          <option>「这场婚，我不结了」·悔婚名场面（古言·女频）</option>
+          <option>「签了这份合同」·商战谈判钩子（都市·男频）</option>
         </select>
       </div>
       <div>
@@ -3432,15 +3808,6 @@ tbody tr:hover { background: #f8fafc; }
         </div>
       </div>
       <div>
-        <label style="font-size:12px; color:#64748b; display:block; margin-bottom:6px;">目标平台</label>
-        <div style="display:flex; gap:6px;">
-          <span class="filter-pill active">通用</span>
-          <span class="filter-pill">巨量引擎</span>
-          <span class="filter-pill">腾讯广告</span>
-          <span class="filter-pill">快手磁力</span>
-        </div>
-      </div>
-      <div>
         <label style="font-size:12px; color:#64748b; display:block; margin-bottom:6px;">生成完成后自动推送到量产管理</label>
         <div style="display:flex; gap:8px;">
           <label style="font-size:13px; color:#334155; display:flex; align-items:center; gap:4px;"><input type="radio" name="auto-push"> 是，自动推送</label>
@@ -3454,6 +3821,238 @@ tbody tr:hover { background: #f8fafc; }
     <div style="display:flex; justify-content:flex-end; gap:8px; margin-top:20px;">
       <button class="btn btn-outline" onclick="hideModal('fission-task-modal')">取消</button>
       <button class="btn btn-primary">确认发起</button>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== 弹窗：脚本解析（AI 拆解种子视频脚本） ==================== -->
+<div class="modal-overlay" id="script-parse-modal">
+  <div class="modal-card" style="width:680px; max-height:82vh; overflow-y:auto;">
+    <h3>脚本解析 <span style="font-size:12px; color:#94a3b8; font-weight:400;">— 霸总归来_开场1（都市·女频·15s）</span></h3>
+    <div style="display:flex; flex-direction:column; gap:16px; margin-top:8px;">
+
+      <div>
+        <div style="font-size:13px; font-weight:600; color:#6d28d9; margin-bottom:8px;">分镜 / 场景</div>
+        <div style="border:1px solid #e2e8f0; border-radius:8px; overflow:hidden;">
+          <div style="display:flex; gap:10px; padding:10px 12px; border-bottom:1px solid #f1f5f9; font-size:13px; color:#334155;">
+            <span style="color:#7c3aed; font-weight:600; white-space:nowrap;">00:00–00:04</span>
+            <span>写字楼落地窗前，女主背影转身，冷冽特写建立悬念。</span>
+          </div>
+          <div style="display:flex; gap:10px; padding:10px 12px; border-bottom:1px solid #f1f5f9; font-size:13px; color:#334155;">
+            <span style="color:#7c3aed; font-weight:600; white-space:nowrap;">00:04–00:10</span>
+            <span>会议室对峙，秘书递上文件，男主神情骤变，节奏拉升。</span>
+          </div>
+          <div style="display:flex; gap:10px; padding:10px 12px; font-size:13px; color:#334155;">
+            <span style="color:#7c3aed; font-weight:600; white-space:nowrap;">00:10–00:15</span>
+            <span>反转揭秘 + 悬念定格，抛出「她到底是谁」钩子。</span>
+          </div>
+        </div>
+      </div>
+
+      <div>
+        <div style="font-size:13px; font-weight:600; color:#6d28d9; margin-bottom:8px;">台词 / 旁白</div>
+        <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px; padding:12px 14px; font-size:13px; color:#334155; line-height:1.7;">
+          <div style="color:#94a3b8; font-size:11px;">【旁白】</div>
+          <div style="margin-bottom:8px;">所有人都以为她输了，直到她把那份文件拍在桌上。</div>
+          <div style="color:#94a3b8; font-size:11px;">【女主台词】</div>
+          <div>「这家公司，从今天起，我说了算。」</div>
+        </div>
+      </div>
+
+      <div>
+        <div style="font-size:13px; font-weight:600; color:#6d28d9; margin-bottom:8px;">关键要素</div>
+        <div style="display:flex; gap:6px; flex-wrap:wrap;">
+          <span class="pill" style="background:#ede9fe; color:#6d28d9; font-size:12px;">霸总+秘书</span>
+          <span class="pill" style="background:#ede9fe; color:#6d28d9; font-size:12px;">办公室对峙</span>
+          <span class="pill" style="background:#ede9fe; color:#6d28d9; font-size:12px;">反转揭秘</span>
+          <span class="pill" style="background:#ede9fe; color:#6d28d9; font-size:12px;">悬念开场</span>
+          <span class="pill" style="background:#ede9fe; color:#6d28d9; font-size:12px;">强情绪钩子</span>
+        </div>
+      </div>
+
+    </div>
+    <div style="display:flex; justify-content:flex-end; gap:8px; margin-top:20px;">
+      <button class="btn btn-outline" onclick="hideModal('script-parse-modal')">关闭</button>
+      <button class="btn btn-primary" onclick="hideModal('script-parse-modal')">应用到裂变参数</button>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== 弹窗：指定后链路工作流 ==================== -->
+<div class="modal-overlay" id="postlink-modal">
+  <div class="modal-card" style="width:720px; max-height:86vh; overflow-y:auto;">
+    <h3>指定后链路工作流 <span id="postlink-modal-target" style="font-size:12px; color:#94a3b8; font-weight:400;">— 裂变前贴产出后自动衔接生成完整素材</span></h3>
+    <div style="margin-top:8px;">
+      <div style="display:flex; align-items:center; justify-content:flex-end; margin-bottom:10px;">
+        <label style="font-size:12px; color:#64748b; display:flex; align-items:center; gap:4px; cursor:pointer;"><input type="checkbox" checked> 启用后链路</label>
+      </div>
+      <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap; margin-bottom:12px; padding-bottom:12px; border-bottom:1px dashed #e2e8f0;">
+        <label style="font-size:12px; color:#64748b;">衔接工作流：</label>
+        <select style="font-size:12px; border:1px solid #e2e8f0; border-radius:6px; padding:6px 10px; color:#334155;">
+          <option>标准短剧成片流程</option>
+          <option>快投轻量流程</option>
+          <option>高转化长版流程</option>
+          <option>自定义工作流…</option>
+        </select>
+        <span style="font-size:12px; color:#94a3b8;">裂变前贴生成后将自动流转至「素材生成任务」</span>
+      </div>
+      <div style="font-size:12px; color:#94a3b8; margin-bottom:8px;">选择衔接处理方式（可多选），选中后填写对应衔接内容：</div>
+      <div style="display:flex; gap:8px; flex-wrap:wrap;">
+        <span class="filter-pill active" onclick="toggleLinkOption(this,'lk-text')">增加衔接文本</span>
+        <span class="filter-pill active" onclick="toggleLinkOption(this,'lk-visual')">增加衔接画面</span>
+        <span class="filter-pill" onclick="toggleLinkOption(this,'lk-plot')">增加衔接剧情</span>
+        <span class="filter-pill" onclick="toggleLinkOption(this,'lk-cta')">增加行动号召 CTA</span>
+        <span class="filter-pill" onclick="toggleLinkOption(this,'lk-outro')">增加片尾引导</span>
+        <span class="filter-pill" onclick="toggleLinkOption(this,'lk-fx')">增加转场特效</span>
+      </div>
+
+      <!-- 衔接内容输入口（随选中项显示） -->
+      <div style="margin-top:12px; display:flex; flex-direction:column; gap:10px;">
+        <div id="lk-text" class="link-input-block">
+          <label style="font-size:12px; color:#334155; font-weight:500; display:block; margin-bottom:4px;">衔接文本内容</label>
+          <textarea rows="2" placeholder="输入衔接旁白/字幕文案，如：想知道她的选择吗？完整剧情马上揭晓…" style="width:100%; border:1px solid #e2e8f0; border-radius:6px; padding:8px 10px; font-size:13px; resize:vertical; box-sizing:border-box;"></textarea>
+        </div>
+        <div id="lk-visual" class="link-input-block">
+          <label style="font-size:12px; color:#334155; font-weight:500; display:block; margin-bottom:4px;">衔接画面内容</label>
+          <div style="display:flex; gap:8px; align-items:center;">
+            <input placeholder="输入画面描述 / 指定衔接镜头，如：主角特写 + 剧名 LOGO" style="flex:1; border:1px solid #e2e8f0; border-radius:6px; padding:8px 10px; font-size:13px;">
+            <button class="btn btn-outline" style="font-size:12px; white-space:nowrap;">上传画面素材</button>
+          </div>
+        </div>
+        <div id="lk-plot" class="link-input-block" style="display:none;">
+          <label style="font-size:12px; color:#334155; font-weight:500; display:block; margin-bottom:6px;">衔接剧情</label>
+          <div id="plot-added-list" style="display:flex; flex-direction:column; gap:6px; margin-bottom:8px;"></div>
+          <button class="btn btn-outline" style="font-size:12px;" onclick="togglePlotQuery()">+ 添加剧情</button>
+
+          <div id="plot-query-panel" style="display:none; margin-top:10px; padding:12px 14px; background:#fff; border:1px solid #e2e8f0; border-radius:8px;">
+            <div style="display:flex; gap:8px; flex-wrap:wrap; align-items:flex-end;">
+              <div>
+                <label style="font-size:11px; color:#94a3b8; display:block; margin-bottom:4px;">数据源</label>
+                <select style="font-size:12px; border:1px solid #e2e8f0; border-radius:6px; padding:6px 10px; color:#334155;">
+                  <option>剧集素材库</option>
+                  <option>已上线短剧</option>
+                  <option>外部授权片源</option>
+                  <option>自制剧情库</option>
+                </select>
+              </div>
+              <div>
+                <label style="font-size:11px; color:#94a3b8; display:block; margin-bottom:4px;">剧名称</label>
+                <input placeholder="输入剧名称" style="width:130px; font-size:12px; border:1px solid #e2e8f0; border-radius:6px; padding:6px 10px;">
+              </div>
+              <div>
+                <label style="font-size:11px; color:#94a3b8; display:block; margin-bottom:4px;">第几集</label>
+                <input placeholder="如 12" style="width:70px; font-size:12px; border:1px solid #e2e8f0; border-radius:6px; padding:6px 10px;">
+              </div>
+              <div>
+                <label style="font-size:11px; color:#94a3b8; display:block; margin-bottom:4px;">开始时间</label>
+                <input placeholder="00:00" style="width:70px; font-size:12px; border:1px solid #e2e8f0; border-radius:6px; padding:6px 10px;">
+              </div>
+              <div>
+                <label style="font-size:11px; color:#94a3b8; display:block; margin-bottom:4px;">结束时间</label>
+                <input placeholder="00:30" style="width:70px; font-size:12px; border:1px solid #e2e8f0; border-radius:6px; padding:6px 10px;">
+              </div>
+              <button class="btn btn-primary" style="font-size:12px;" onclick="runPlotQuery()">查询</button>
+            </div>
+
+            <div id="plot-query-results" style="display:none; margin-top:12px;">
+              <div style="font-size:11px; color:#94a3b8; margin-bottom:6px;">查询结果（勾选后添加）：</div>
+              <div style="border:1px solid #e2e8f0; border-radius:6px; overflow:hidden;">
+                <label style="display:flex; align-items:center; gap:8px; padding:8px 10px; border-bottom:1px solid #f1f5f9; font-size:12px; color:#334155; cursor:pointer;">
+                  <input type="checkbox" class="plot-result-cb" data-plot="霸总归来 · 第12集 · 00:05-00:32 · 反转对峙">
+                  <span style="flex:1;">霸总归来 · 第12集 <span style="color:#94a3b8;">00:05-00:32</span></span>
+                  <span class="pill" style="background:#ede9fe; color:#6d28d9; font-size:11px;">反转对峙</span>
+                </label>
+                <label style="display:flex; align-items:center; gap:8px; padding:8px 10px; border-bottom:1px solid #f1f5f9; font-size:12px; color:#334155; cursor:pointer;">
+                  <input type="checkbox" class="plot-result-cb" data-plot="霸总归来 · 第13集 · 01:10-01:45 · 秘书身世揭秘">
+                  <span style="flex:1;">霸总归来 · 第13集 <span style="color:#94a3b8;">01:10-01:45</span></span>
+                  <span class="pill" style="background:#ede9fe; color:#6d28d9; font-size:11px;">身世揭秘</span>
+                </label>
+                <label style="display:flex; align-items:center; gap:8px; padding:8px 10px; border-bottom:1px solid #f1f5f9; font-size:12px; color:#334155; cursor:pointer;">
+                  <input type="checkbox" class="plot-result-cb" data-plot="霸总归来 · 第15集 · 00:20-00:58 · 豪门恩怨爆发">
+                  <span style="flex:1;">霸总归来 · 第15集 <span style="color:#94a3b8;">00:20-00:58</span></span>
+                  <span class="pill" style="background:#ede9fe; color:#6d28d9; font-size:11px;">恩怨爆发</span>
+                </label>
+                <label style="display:flex; align-items:center; gap:8px; padding:8px 10px; font-size:12px; color:#334155; cursor:pointer;">
+                  <input type="checkbox" class="plot-result-cb" data-plot="霸总归来 · 第18集 · 02:00-02:30 · 复仇高潮">
+                  <span style="flex:1;">霸总归来 · 第18集 <span style="color:#94a3b8;">02:00-02:30</span></span>
+                  <span class="pill" style="background:#ede9fe; color:#6d28d9; font-size:11px;">复仇高潮</span>
+                </label>
+              </div>
+              <div style="display:flex; justify-content:flex-end; margin-top:8px;">
+                <button class="btn btn-primary" style="font-size:12px;" onclick="addSelectedPlots()">添加所选</button>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div id="lk-cta" class="link-input-block" style="display:none;">
+          <label style="font-size:12px; color:#334155; font-weight:500; display:block; margin-bottom:4px;">行动号召 CTA 文案</label>
+          <input placeholder="输入引导文案，如：点击下方立即观看完整剧集" style="width:100%; border:1px solid #e2e8f0; border-radius:6px; padding:8px 10px; font-size:13px; box-sizing:border-box;">
+        </div>
+        <div id="lk-outro" class="link-input-block" style="display:none;">
+          <label style="font-size:12px; color:#334155; font-weight:500; display:block; margin-bottom:4px;">片尾引导内容</label>
+          <input placeholder="输入片尾引导文案 / 追更提示，如：关注不迷路，每晚8点更新" style="width:100%; border:1px solid #e2e8f0; border-radius:6px; padding:8px 10px; font-size:13px; box-sizing:border-box;">
+        </div>
+        <div id="lk-fx" class="link-input-block" style="display:none;">
+          <label style="font-size:12px; color:#334155; font-weight:500; display:block; margin-bottom:4px;">转场特效</label>
+          <select style="width:100%; font-size:13px; border:1px solid #e2e8f0; border-radius:6px; padding:8px 10px; color:#334155; box-sizing:border-box;">
+            <option>默认淡入淡出</option>
+            <option>快切冲击</option>
+            <option>故障风格 Glitch</option>
+            <option>光效扫描</option>
+            <option>缩放推进</option>
+          </select>
+        </div>
+      </div>
+
+      <div style="margin-top:14px; padding-top:12px; border-top:1px dashed #e2e8f0; display:flex; justify-content:flex-end;">
+        <button class="btn btn-outline" style="font-size:12px;" onclick="alert('已保存为衔接工作流，可在「衔接工作流」下拉中复用')">保存为衔接工作流</button>
+      </div>
+    </div>
+    <div style="display:flex; justify-content:flex-end; gap:8px; margin-top:20px;">
+      <button class="btn btn-outline" onclick="hideModal('postlink-modal')">取消</button>
+      <button class="btn btn-primary" onclick="hideModal('postlink-modal')">确定指定</button>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== 弹窗：裂变前贴预览 ==================== -->
+<div class="modal-overlay" id="fission-preview-modal">
+  <div class="modal-card" style="width:760px; max-height:88vh; overflow-y:auto;">
+    <h3>裂变前贴预览 <span id="fission-preview-name" style="font-size:12px; color:#94a3b8; font-weight:400;">— 霸总归来_换脸v4_甜美型</span></h3>
+    <div style="display:flex; gap:20px; margin-top:8px;">
+      <!-- 左：视频预览 -->
+      <div style="width:300px; flex-shrink:0;">
+        <div style="width:100%; aspect-ratio:9/16; border-radius:10px; background:linear-gradient(135deg,#c084fc,#7c3aed); position:relative;">
+          <div style="position:absolute; inset:0; display:flex; align-items:center; justify-content:center; color:#fff; font-size:40px; background:rgba(0,0,0,.15); border-radius:10px;">▶</div>
+        </div>
+        <div style="font-size:11px; color:#94a3b8; margin-top:8px; text-align:center;">时长 15s · 竖版 9:16 · 1080×1920</div>
+      </div>
+      <!-- 右：信息 -->
+      <div style="flex:1; min-width:0;">
+        <div style="display:flex; gap:6px; flex-wrap:wrap; margin-bottom:12px;">
+          <span class="pill pill-method">换脸</span>
+          <span class="pill" style="background:#f1f5f9; color:#64748b;">都市</span>
+          <span class="pill" style="background:#f1f5f9; color:#64748b;">女频</span>
+          <span class="fission-result-status fs-done">● 已完成</span>
+        </div>
+        <div style="font-size:13px; color:#334155; line-height:1.8;">
+          <div><span style="color:#94a3b8;">原片关联：</span>霸总归来_开场1</div>
+          <div><span style="color:#94a3b8;">裂变方式：</span>主体 & 元素替换（换脸）</div>
+          <div><span style="color:#94a3b8;">生成时间：</span>07-09 14:32</div>
+          <div><span style="color:#94a3b8;">后链路状态：</span><span id="fission-preview-postlink" style="color:#94a3b8;">未指定</span></div>
+        </div>
+        <div style="margin-top:14px; padding:12px 14px; background:#faf9ff; border:1px solid #ede9fe; border-radius:10px;">
+          <div style="font-size:12px; color:#6d28d9; font-weight:600; margin-bottom:6px;">前贴文案</div>
+          <div style="font-size:12px; color:#334155; line-height:1.7;">所有人都以为她输了，直到她把那份文件拍在桌上。「这家公司，从今天起，我说了算。」</div>
+        </div>
+      </div>
+    </div>
+    <div style="display:flex; justify-content:space-between; gap:8px; margin-top:20px;">
+      <button class="btn btn-outline" onclick="openPostlinkFromPreview()">指定后链路工作流</button>
+      <div style="display:flex; gap:8px;">
+        <button class="btn btn-outline" onclick="hideModal('fission-preview-modal')">关闭</button>
+        <button class="btn btn-success" onclick="hideModal('fission-preview-modal')">推送到量产</button>
+      </div>
     </div>
   </div>
 </div>
@@ -3537,17 +4136,9 @@ tbody tr:hover { background: #f8fafc; }
             <span class="filter-pill active" id="approve-tag-manual" onclick="switchApproveTagMode('manual')">人工打标</span>
             <span class="filter-pill" id="approve-tag-ai" onclick="switchApproveTagMode('ai')">AI 打标</span>
           </div>
-          <!-- 人工：手动选择标签 -->
-          <div id="approve-tag-fields" style="display:flex; gap:8px; flex-wrap:wrap; margin-top:10px;">
-            <select class="filter-select">
-              <option>题材：都市</option><option>题材：古装</option><option>题材：仙侠</option><option>题材：豪门</option>
-            </select>
-            <select class="filter-select">
-              <option>场景：办公室</option><option>场景：豪宅</option><option>场景：街头</option><option>场景：宫廷</option>
-            </select>
-            <select class="filter-select">
-              <option>受众频道：女频</option><option>受众频道：男频</option><option>受众频道：通用</option>
-            </select>
+          <!-- 人工：级联选择器（与"新增种子前贴"标签选择完全一致） -->
+          <div id="approve-tag-fields" style="margin-top:10px;">
+            <div id="approve-cascader"></div>
           </div>
           <!-- AI：自动打标提示 -->
           <div id="approve-tag-ai-hint" style="display:none; margin-top:10px; padding:8px 12px; background:#f5f3ff; border-radius:8px; font-size:12px; color:#7c3aed;">
@@ -3686,19 +4277,9 @@ tbody tr:hover { background: #f8fafc; }
           <span class="filter-pill active" id="batch-tag-manual" onclick="switchBatchTagMode('manual')">人工打标</span>
           <span class="filter-pill" id="batch-tag-ai" onclick="switchBatchTagMode('ai')">AI 打标</span>
         </div>
-        <!-- 人工：手动选择标签 -->
+        <!-- 人工：级联选择器（与"新增种子前贴"标签选择完全一致） -->
         <div id="batch-tag-fields" style="margin-top:10px;">
-          <div style="display:flex; gap:8px; flex-wrap:wrap;">
-            <select class="filter-select">
-              <option>题材：都市</option><option>题材：古装</option><option>题材：仙侠</option><option>题材：豪门</option>
-            </select>
-            <select class="filter-select">
-              <option>场景：办公室</option><option>场景：豪宅</option><option>场景：街头</option><option>场景：宫廷</option>
-            </select>
-            <select class="filter-select">
-              <option>受众频道：女频</option><option>受众频道：男频</option><option>受众频道：通用</option>
-            </select>
-          </div>
+          <div id="batch-cascader"></div>
           <div style="font-size:11px; color:#94a3b8; margin-top:6px;">所选标签将统一应用于全部 4 条素材</div>
         </div>
         <!-- AI：自动打标提示 -->
@@ -3720,6 +4301,61 @@ tbody tr:hover { background: #f8fafc; }
   </div>
 </div>
 
+<!-- ==================== 弹窗：资产详情（分层属性） ==================== -->
+<div class="modal-overlay" id="asset-detail-modal">
+  <div class="modal-card" style="width:760px;">
+    <div style="display:flex; align-items:flex-start; justify-content:space-between; margin-bottom:16px;">
+      <div id="asset-detail-title">
+        <h3 style="margin:0;">资产详情</h3>
+      </div>
+      <span onclick="hideModal('asset-detail-modal')" style="cursor:pointer; color:#94a3b8; font-size:20px; line-height:1;">×</span>
+    </div>
+    <div id="asset-detail-body"></div>
+    <div style="display:flex; justify-content:flex-end; gap:8px; margin-top:20px;">
+      <button class="btn btn-outline" onclick="hideModal('asset-detail-modal')">关闭</button>
+      <button class="btn btn-outline">导出参数 JSON</button>
+      <button class="btn btn-primary">编辑资产</button>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== 弹窗：新增资产 ==================== -->
+<div class="modal-overlay" id="asset-add-modal">
+  <div class="modal-card" style="width:520px;">
+    <h3>新增数据资产</h3>
+    <div style="display:flex; flex-direction:column; gap:14px;">
+      <div>
+        <label style="font-size:12px; color:#64748b; display:block; margin-bottom:6px;">资产类型 <span style="color:#ef4444;">*</span></label>
+        <select class="filter-select" style="width:100%; padding:8px 10px;">
+          <option>人物</option><option>场景</option><option>服饰</option><option>道具</option><option>风格</option>
+        </select>
+      </div>
+      <div>
+        <label style="font-size:12px; color:#64748b; display:block; margin-bottom:6px;">资产名称 <span style="color:#ef4444;">*</span></label>
+        <input class="search-input" style="width:100%;" placeholder="例如：苏若曦 · 女主">
+      </div>
+      <div>
+        <label style="font-size:12px; color:#64748b; display:block; margin-bottom:6px;">细分分类</label>
+        <input class="search-input" style="width:100%;" placeholder="例如：主角 / 室内场景 / 晚礼服 …">
+      </div>
+      <div>
+        <label style="font-size:12px; color:#64748b; display:block; margin-bottom:6px;">上传资产文件</label>
+        <div style="border:1.5px dashed #cbd5e1; border-radius:10px; padding:24px; text-align:center; color:#94a3b8; font-size:13px;">
+          拖拽模型 / 贴图 / 参考图到此处，或 <span style="color:#7c3aed; cursor:pointer;">点击选择文件</span>
+        </div>
+      </div>
+      <div>
+        <label style="font-size:12px; color:#64748b; display:block; margin-bottom:6px;">备注</label>
+        <textarea class="search-input" style="width:100%; height:64px; resize:none;" placeholder="资产用途、来源、注意事项…"></textarea>
+      </div>
+    </div>
+    <div style="display:flex; justify-content:flex-end; gap:8px; margin-top:20px;">
+      <button class="btn btn-outline" onclick="hideModal('asset-add-modal')">取消</button>
+      <button class="btn btn-primary" onclick="hideModal('asset-add-modal')">创建资产</button>
+    </div>
+  </div>
+</div>
+
 <script>
 // 模块切换
 function switchModule(mod) {
@@ -3727,6 +4363,260 @@ function switchModule(mod) {
   document.querySelectorAll('.nav-link').forEach(n => n.classList.remove('active'));
   document.getElementById('module-' + mod).classList.add('active');
   document.getElementById('nav-' + mod).classList.add('active');
+}
+
+// ===== 数据资产管理 =====
+var ASSET_CUR_TYPE = 'person';
+var ASSET_SUBCATS = {
+  person: ['全部','男','女','老','幼','古代','现代'],
+  scene:  ['全部','古代','现代'],
+  costume:['全部','古代','现代'],
+  prop:   ['全部','古代','现代'],
+  style:  []
+};
+
+function renderSubcatBar(type) {
+  var bar = document.getElementById('asset-subcat-bar');
+  if (!bar) return;
+  var cats = ASSET_SUBCATS[type] || [];
+  if (cats.length === 0) { bar.style.display = 'none'; return; }
+  bar.style.display = 'flex';
+  var html = '<span class="filter-label" style="margin-right:2px;">细分：</span>';
+  cats.forEach(function(c, i){
+    html += '<span class="filter-pill' + (i === 0 ? ' active' : '') + '" onclick="filterAssetCat(this,\'' + c + '\')">' + c + '</span>';
+  });
+  bar.innerHTML = html;
+}
+
+function switchAssetType(el, type) {
+  el.parentElement.querySelectorAll('.tab-item').forEach(t => t.classList.remove('active'));
+  el.classList.add('active');
+  ASSET_CUR_TYPE = type;
+  ['person','scene','costume','prop','style'].forEach(function(t){
+    var p = document.getElementById('asset-panel-' + t);
+    if (p) p.style.display = (t === type) ? 'block' : 'none';
+  });
+  renderSubcatBar(type);
+}
+
+// 二级分类筛选：按 data-cat 过滤当前面板卡片
+function filterAssetCat(el, cat) {
+  if (el && el.parentElement) {
+    el.parentElement.querySelectorAll('.filter-pill').forEach(p => p.classList.remove('active'));
+    el.classList.add('active');
+  }
+  var panel = document.getElementById('asset-panel-' + ASSET_CUR_TYPE);
+  if (!panel) return;
+  panel.querySelectorAll('.asset-card').forEach(function(card){
+    var cats = (card.getAttribute('data-cat') || '').split(/\s+/);
+    var show = (cat === '全部') || cats.indexOf(cat) !== -1;
+    card.style.display = show ? 'flex' : 'none';
+  });
+}
+
+// 资产详情：取值助手（缺省回退）
+function pv(a, k, d) { return (a && a[k] != null && a[k] !== '') ? a[k] : d; }
+var FRAMES6 = '<span class="attr-badge">正面</span><span class="attr-badge">正侧45°</span><span class="attr-badge">正侧90°</span><span class="attr-badge">背面</span><span class="attr-badge">仰视</span><span class="attr-badge">俯视</span>';
+
+// 各资产类型的分层属性模板（用 pv 提供缺省值，卡片数据只需给出差异化字段）
+var TPL = {
+  person: function(a){ return [
+    { name:'生物特征层', groups:[
+      { title:'面部特征点', attrs:[
+        ['脸型', pv(a,'face','椭圆')], ['眼型', pv(a,'eye','丹凤眼')], ['鼻型', pv(a,'nose','标准挺鼻')], ['唇部轮廓', pv(a,'lip','标准唇形')], ['眉骨高度', pv(a,'brow','中等')], ['颧骨宽度', pv(a,'cheek','适中')] ] },
+      { title:'皮肤微观属性', attrs:[
+        ['肤色色号', '<span class="color-swatch" style="background:'+pv(a,'skinHex','#f5d5c0')+';"></span>'+pv(a,'skin','#F5D5C0 / RGB(245,213,192)')], ['肤质', pv(a,'skinType','中性')], ['纹理细节', pv(a,'texture','毛孔细腻 · 皱纹密度低')], ['皮下散射 SSS', pv(a,'sss','强度 0.60')] ] },
+      { title:'体型参数', attrs:[
+        ['身高', pv(a,'height','170 cm')], ['头身比', pv(a,'ratio','1 : 7.0')], ['肩宽/胯宽比', pv(a,'shoulder','0.95')], ['四肢骨骼长度', pv(a,'limb','上臂 30cm / 前臂 25cm / 大腿 44cm')], ['手指粗细', pv(a,'finger','适中（指径 14mm）')] ] },
+      { title:'年龄与生理状态', attrs:[
+        ['年龄刻度', pv(a,'age','30 岁')], ['疲劳度', pv(a,'fatigue','低（黑眼圈 15%）')], ['唇色苍白度', pv(a,'pale','10%（健康红润）')] ] } ] },
+    { name:'特征化装扮层', groups:[
+      { title:'发型', attrs:[
+        ['发型轮廓', pv(a,'hair','中长发')], ['刘海形式', pv(a,'bang','中分')], ['发色渐变', pv(a,'haircolor','<span class="color-swatch" style="background:#3b2417;"></span>深棕')], ['发丝质感', pv(a,'hairtex','自然直发')], ['毛躁度', pv(a,'frizz','0.15（顺滑）')] ] },
+      { title:'面部装饰', attrs:[
+        ['眼镜', pv(a,'glasses','无')], ['耳环', pv(a,'earring','无')], ['面部彩绘', pv(a,'paint','无')], ['痣 / 疤痕坐标', pv(a,'mole','无')] ] } ] },
+    { name:'数字延伸层', groups:[
+      { title:'多角度参考集', attrs:[ ['标准帧', pv(a,'frames', FRAMES6)] ] },
+      { title:'微表情库 (FACS)', attrs:[
+        ['喜', pv(a,'fJoy','AU6+AU12 · 强度 0.8')], ['怒', pv(a,'fAnger','AU4+AU5+AU23 · 强度 0.7')], ['哀', pv(a,'fSad','AU1+AU15 · 强度 0.6')], ['惧', pv(a,'fFear','AU1+AU2+AU5+AU20')], ['惊', pv(a,'fSurprise','AU1+AU2+AU5+AU26')], ['厌', pv(a,'fDisgust','AU9+AU15+AU16')] ] },
+      { title:'骨骼绑定数据', attrs:[
+        ['全身关节点', pv(a,'joints','52 个关节坐标已绑定')], ['手指关节自由度', pv(a,'dof','每指 3 DOF · 双手共 30 DOF')], ['驱动就绪', pv(a,'drive','<span class="attr-badge">支持 AI 动作驱动</span>')] ] } ] }
+  ];},
+  scene: function(a){ return [
+    { name:'空间结构层', groups:[
+      { title:'建筑拓扑', attrs:[
+        ['平面布局', pv(a,'layout','俯视图已标注 · 墙体/地面/天花板')], ['动线通道', pv(a,'flow','主入口 → 核心区 → 出口')], ['门窗开口', pv(a,'opening','门 ×2 · 窗 ×1')] ] },
+      { title:'物理尺寸标注', attrs:[
+        ['层高', pv(a,'sHeight','3.5 m')], ['房间纵深', pv(a,'depth','8.0 m')], ['物件间距', pv(a,'spacing','主物件间距 2.0m（防透视畸变）')] ] },
+      { title:'地形地貌', attrs:[
+        ['地表起伏', pv(a,'terrain','平整（高度图 0）')], ['植被覆盖', pv(a,'veg','绿植 3 处 · 密度 8%')], ['水体反射率', pv(a,'water','N/A')] ] } ] },
+    { name:'材质表面层', groups:[
+      { title:'PBR 材质球', attrs:[
+        ['基础色贴图', pv(a,'baseColor','已配置')], ['法线贴图', pv(a,'normal','已配置（凹凸强度 0.4）')], ['粗糙度贴图', pv(a,'rough','地面 0.3 / 墙面 0.6')], ['金属度贴图', pv(a,'metal','金属件 1.0')], ['环境光遮蔽', pv(a,'ao','AO 已烘焙')] ] },
+      { title:'透明 / 半透属性', attrs:[
+        ['玻璃折射率 IOR', pv(a,'ior','1.52')], ['雾气浓度', pv(a,'fog','0（清晰）')], ['粒子密度', pv(a,'particle','灰尘 5%')] ] } ] },
+    { name:'动态环境层', groups:[
+      { title:'光照预设', attrs:[
+        ['日光角度 / 色温', pv(a,'sun','偏角 42° · 5600K')], ['人造光点位', pv(a,'light','筒灯 ×6')], ['强度流明', pv(a,'lumen','主光 3200 lm')] ] },
+      { title:'天气参数', attrs:[
+        ['云层覆盖率', pv(a,'cloud','20%')], ['风速 / 风向', pv(a,'wind','室内 0 m/s')], ['雨雪粒子', pv(a,'rainsnow','无')] ] },
+      { title:'时间流动性', attrs:[
+        ['色温渐变曲线', pv(a,'colortemp','晨 4200K → 昼 5600K → 昏 2700K')], ['日影偏移轨迹', pv(a,'shadow','已录制 12 帧')] ] } ] }
+  ];},
+  costume: function(a){ return [
+    { name:'版型结构层', groups:[
+      { title:'廓形裁剪', attrs:[
+        ['廓形分类', pv(a,'shape','H 型')], ['衣长', pv(a,'len','常规')], ['袖长', pv(a,'sleeve','长袖')], ['裙摆开衩高度', pv(a,'slit','无')] ] },
+      { title:'层叠关系', attrs:[
+        ['穿叠顺序', pv(a,'order','内搭 → 外穿')], ['衣领/袖口交叠', pv(a,'collar','圆领 · 标准袖口')] ] } ] },
+    { name:'面料物理层', groups:[
+      { title:'动力学参数', attrs:[
+        ['柔软度', pv(a,'soft','弯曲刚度 0.30')], ['垂坠系数', pv(a,'drape','0.60')], ['伸缩性', pv(a,'elastic','弹性模量 3.0 MPa')], ['面料厚度', pv(a,'thick','0.8 mm')] ] },
+      { title:'表面工艺', attrs:[
+        ['工艺类型', pv(a,'craft','平织')], ['重复单元矢量', pv(a,'unit','无')], ['褶皱折痕位置', pv(a,'wrinkle','自然褶皱')] ] } ] },
+    { name:'装饰元素层', groups:[
+      { title:'辅料配件', attrs:[
+        ['纽扣', pv(a,'button','标准纽扣')], ['拉链走向', pv(a,'zipper','无')], ['铆钉排列', pv(a,'rivet','无')], ['绣线色号', pv(a,'thread','<span class="color-swatch" style="background:#334155;"></span>#334155')] ] },
+      { title:'文化标识', attrs:[
+        ['花纹数据库', pv(a,'pattern','无')], ['图腾矢量', pv(a,'totem','无')] ] } ] }
+  ];},
+  prop: function(a){ return [
+    { name:'功能结构层', groups:[
+      { title:'零件拆解', attrs:[
+        ['主体', pv(a,'body','主体 · 独立建模')], ['手柄', pv(a,'handle','无')], ['刀刃 / 尖端', pv(a,'blade','无')], ['按钮 / 旋钮', pv(a,'knob','无')], ['连接轴', pv(a,'axis','无')] ] },
+      { title:'机械传动逻辑', attrs:[
+        ['可动部件', pv(a,'movable','无（刚体）')], ['联动旋转轨迹', pv(a,'rotate','N/A')] ] } ] },
+    { name:'质感状态层', groups:[
+      { title:'新旧程度', attrs:[
+        ['做旧磨损贴图', pv(a,'wear','划痕密度 20%')], ['掉漆位置', pv(a,'paint2','边缘轻微')], ['锈蚀 / 包浆', pv(a,'rust','包浆 20%')] ] },
+      { title:'交互痕迹', attrs:[
+        ['血渍喷溅角度', pv(a,'blood','无')], ['水珠凝结', pv(a,'water2','无')], ['指纹 / 划痕', pv(a,'fingerprint','轻微')] ] } ] },
+    { name:'使用状态层', groups:[
+      { title:'被持握方式', attrs:[
+        ['握持方式', pv(a,'hold','单手')], ['握持点位坐标', pv(a,'holdpos','(0,0,-30)（防穿模）')], ['发力角度', pv(a,'force','标准')] ] },
+      { title:'动态特效预留', attrs:[
+        ['特效锚点', pv(a,'anchor','<span class="attr-badge">无</span>')] ] } ] }
+  ];},
+  style: function(a){ return [
+    { name:'视觉语法层', groups:[
+      { title:'构图范式', attrs:[
+        ['构图', pv(a,'comp','三分法')], ['主体占比', pv(a,'compRatio','35% ~ 45%')] ] },
+      { title:'镜头语言', attrs:[
+        ['焦段', pv(a,'focal','50mm（畸变 0.01）')], ['景深', pv(a,'dof','f/2.8')], ['光晕 / 炫光', pv(a,'flare','标准炫光库')] ] },
+      { title:'色彩科学', attrs:[
+        ['主 / 辅 / 点缀色', pv(a,'colorMain','<span class="color-swatch" style="background:#7c3aed;"></span>紫 / <span class="color-swatch" style="background:#22d3ee;"></span>青')], ['HSL 区间', pv(a,'hsl','H 200-280 · S 60-80% · L 40-60%')], ['饱和度 / 对比度', pv(a,'sat','LUT: 饱和 +15 · 对比 +10')], ['色调分离', pv(a,'split','高光偏青 · 阴影偏紫')] ] } ] },
+    { name:'流派基因层', groups:[
+      { title:'画风基底', attrs:[
+        ['笔触纹理', pv(a,'brush','数字写实')], ['线条粗细', pv(a,'line','硬边 · 断连逻辑低')] ] },
+      { title:'文化美学', attrs:[
+        ['文化配比', pv(a,'culture1','—')], ['晕染扩散速度', pv(a,'culture2','N/A')] ] } ] },
+    { name:'时间质感层', groups:[
+      { title:'噪点与颗粒', attrs:[
+        ['胶片颗粒', pv(a,'grain','大小 0.3 · 分布均匀')], ['柔光参数', pv(a,'softlight','黑柔 0.2')], ['动态模糊拖尾', pv(a,'blur','长度 8px')] ] },
+      { title:'时代滤镜', attrs:[
+        ['扫描线频率', pv(a,'scan','弱（0.1）')], ['VHS 色彩偏移', pv(a,'vhs','R +2 / B -1')], ['黑白对比曲线', pv(a,'bw','S 型 · 未启用')] ] } ] }
+  ];}
+};
+
+// 各资产卡片数据（仅需给出差异化字段，其余由模板缺省填充）
+var ASSET_DATA = {
+  // —— 人物 ——
+  p_su: { type:'person', title:'苏若曦 · 女主', code:'PER-0821', icon:'🧑‍🦰', grad:'linear-gradient(135deg,#a78bfa,#7c3aed)', cat:'女 · 现代',
+    face:'椭圆', eye:'丹凤眼', nose:'小巧挺鼻', lip:'标准唇形 · 微翘', brow:'中低（1.2mm）', cheek:'窄（132mm）', skinHex:'#f5d5c0', skin:'#F5D5C0 / RGB(245,213,192)', skinType:'中性偏干', texture:'毛孔细腻 · 无雀斑 · 皱纹密度低', sss:'强度 0.62', height:'168 cm', ratio:'1 : 7.2', shoulder:'0.92', limb:'上臂 30cm / 前臂 25cm / 大腿 44cm', finger:'纤细（指径 12mm）', age:'35 岁', fatigue:'低（黑眼圈 15%）', hair:'过腰长发', bang:'中分无刘海', haircolor:'<span class="color-swatch" style="background:#3b2417;"></span>深棕 → <span class="color-swatch" style="background:#6b4423;"></span>栗棕', hairtex:'大波浪卷', frizz:'0.15（顺滑）', earring:'珍珠耳钉 · 亚光', mole:'左眼下 (x:0.42, y:0.58) 泪痣' },
+  p_ceo: { type:'person', title:'霸道总裁 · 男主', code:'PER-0644', icon:'🧔', grad:'linear-gradient(135deg,#60a5fa,#2563eb)', cat:'男 · 现代',
+    face:'方圆', eye:'剑眉星目', nose:'高挺直鼻', lip:'薄唇 · 棱角分明', brow:'高（2.4mm）', cheek:'宽（148mm）', skinHex:'#e8b98f', skin:'#E8B98F / RGB(232,185,143)', skinType:'中性', texture:'毛孔适中 · 胡茬阴影', sss:'强度 0.48', height:'185 cm', ratio:'1 : 7.6', shoulder:'1.18', limb:'上臂 34cm / 前臂 28cm / 大腿 50cm', finger:'修长（指径 16mm）', age:'32 岁', fatigue:'低（黑眼圈 10%）', hair:'背头短发', bang:'全后梳', haircolor:'<span class="color-swatch" style="background:#1c1917;"></span>纯黑', hairtex:'硬直', frizz:'0.08（服帖）', earring:'无', mole:'无' },
+  p_villain: { type:'person', title:'恶毒女配 · 反派', code:'PER-0512', icon:'👩', grad:'linear-gradient(135deg,#f472b6,#db2777)', cat:'女 · 现代',
+    face:'倒三角', eye:'下垂眼', nose:'挺鼻', lip:'厚唇 · 浓妆', brow:'中（1.6mm）', cheek:'适中', skinHex:'#f2d0be', skin:'#F2D0BE / RGB(242,208,190)', skinType:'油性', texture:'雀斑密度中 · 毛孔略粗', sss:'强度 0.55', height:'172 cm', age:'28 岁', fatigue:'中（黑眼圈 30%）', hair:'及肩卷发', haircolor:'<span class="color-swatch" style="background:#7c2d12;"></span>酒红挑染', hairtex:'蓬松卷', mole:'右嘴角 (x:0.61, y:0.72) 痣' },
+  p_old: { type:'person', title:'家族老爷子 · 配角', code:'PER-0399', icon:'👴', grad:'linear-gradient(135deg,#34d399,#059669)', cat:'男 · 老 · 现代',
+    face:'方圆', eye:'眼睑松弛', nose:'厚鼻', lip:'薄唇 · 法令纹深', brow:'花白稀疏', cheek:'凹陷', skinHex:'#d9b48f', skin:'#D9B48F / RGB(217,180,143)', skinType:'干性', texture:'皱纹密度高 · 老年斑', sss:'强度 0.40', height:'170 cm', age:'68 岁', fatigue:'高（眼袋明显）', pale:'25%', hair:'花白短发', haircolor:'<span class="color-swatch" style="background:#d4d4d8;"></span>银灰', hairtex:'稀疏', mole:'额头老年斑 ×3' },
+  p_xianv: { type:'person', title:'江湖侠女 · 女主', code:'PER-0288', icon:'🧝‍♀️', grad:'linear-gradient(135deg,#f0abfc,#a21caf)', cat:'女 · 古代',
+    face:'鹅蛋', eye:'桃花眼', nose:'秀气挺鼻', lip:'樱桃小口', brow:'远山黛', cheek:'窄', skinHex:'#f7ddc8', skin:'#F7DDC8 / RGB(247,221,200)', skinType:'中性', texture:'肤白胜雪 · 无瑕', sss:'强度 0.66', height:'165 cm', age:'24 岁', hair:'高马尾 + 流苏发带', bang:'齐眉刘海', haircolor:'<span class="color-swatch" style="background:#18181b;"></span>乌黑', hairtex:'顺直', earring:'翡翠耳坠', paint:'花钿（额心）', mole:'无' },
+  p_general: { type:'person', title:'少年将军 · 男主', code:'PER-0256', icon:'🤴', grad:'linear-gradient(135deg,#fca5a5,#b91c1c)', cat:'男 · 古代',
+    face:'方圆', eye:'剑眉星目', nose:'高挺', lip:'棱角唇', brow:'浓密上扬', cheek:'宽', skinHex:'#e0b088', skin:'#E0B088 / RGB(224,176,136)', skinType:'中性偏油', texture:'健康麦色 · 眉间刀疤', sss:'强度 0.50', height:'183 cm', age:'26 岁', hair:'束发戴冠', bang:'全束', haircolor:'<span class="color-swatch" style="background:#0c0a09;"></span>墨黑', hairtex:'硬直', mole:'左眉尾刀疤 (x:0.30,y:0.40)' },
+  p_taijun: { type:'person', title:'相府老太君 · 配角', code:'PER-0201', icon:'👵', grad:'linear-gradient(135deg,#d8b4fe,#7e22ce)', cat:'女 · 老 · 古代',
+    face:'方圆', eye:'慈眉善目 · 松弛', nose:'厚鼻', lip:'薄唇', brow:'花白', cheek:'凹陷', skinHex:'#dcbb98', skin:'#DCBB98 / RGB(220,187,152)', skinType:'干性', texture:'皱纹密度高 · 寿斑', sss:'强度 0.42', height:'158 cm', age:'72 岁', fatigue:'高', pale:'30%', hair:'圆髻 + 抹额头面', haircolor:'<span class="color-swatch" style="background:#e5e5e5;"></span>银白', hairtex:'稀疏', earring:'金累丝耳环', paint:'无' },
+  p_girl: { type:'person', title:'天才童星 · 女童', code:'PER-0177', icon:'👧', grad:'linear-gradient(135deg,#fda4af,#e11d48)', cat:'女 · 幼 · 现代',
+    face:'圆脸', eye:'大眼萌', nose:'小翘鼻', lip:'嘟嘟唇', brow:'淡眉', cheek:'圆润', skinHex:'#fbe0d0', skin:'#FBE0D0 / RGB(251,224,208)', skinType:'水润', texture:'婴儿肌 · 苹果肌饱满', sss:'强度 0.72', height:'122 cm', ratio:'1 : 5.5', age:'7 岁', hair:'双马尾', bang:'齐刘海', haircolor:'<span class="color-swatch" style="background:#3f2817;"></span>棕黑', hairtex:'柔顺', mole:'无' },
+  p_boy: { type:'person', title:'古代书童 · 男童', code:'PER-0152', icon:'👦', grad:'linear-gradient(135deg,#93c5fd,#1d4ed8)', cat:'男 · 幼 · 古代',
+    face:'圆脸', eye:'杏眼', nose:'小鼻', lip:'薄唇', brow:'淡眉', cheek:'圆润', skinHex:'#f4d9bf', skin:'#F4D9BF / RGB(244,217,191)', skinType:'水润', texture:'童颜 · 无瑕', sss:'强度 0.70', height:'130 cm', ratio:'1 : 5.8', age:'9 岁', hair:'总角双髻', bang:'齐眉', haircolor:'<span class="color-swatch" style="background:#1c1917;"></span>乌黑', hairtex:'柔软', mole:'无' },
+  // —— 场景 ——
+  s_office: { type:'scene', title:'顶层豪华办公室', code:'SCN-0203', icon:'🏙️', grad:'linear-gradient(135deg,#818cf8,#4f46e5)', cat:'现代',
+    layout:'俯视图已标注 · 墙体/地面/天花板', flow:'主入口 → 办公区 → 落地窗（3.2m 宽）', opening:'门 ×2 · 落地窗 ×1（南向）', sHeight:'3.6 m', depth:'8.4 m', spacing:'办公桌–沙发 2.1m（防透视畸变）', terrain:'室内平整（高度图 0）', veg:'绿植 3 处 · 密度 8%', baseColor:'大理石地面 <span class="color-swatch" style="background:#e8e4dd;"></span>', rough:'地面 0.2 / 墙面 0.6', metal:'金属饰条 1.0', sun:'偏角 42° · 5600K', light:'筒灯 ×6 · 台灯 ×1' },
+  s_rooftop: { type:'scene', title:'黄昏天台', code:'SCN-0177', icon:'🌆', grad:'linear-gradient(135deg,#fbbf24,#d97706)', cat:'现代',
+    layout:'开放式屋顶平台', flow:'楼梯口 → 露台 → 护栏边', opening:'无墙体 · 四面开放', sHeight:'室外（天空盒）', depth:'12 m', terrain:'平整防水层', veg:'盆栽 5 处', water:'N/A', sun:'偏角 8° · 2700K 暖阳', light:'串灯 ×20', cloud:'45%', wind:'3 m/s 东南风', colortemp:'昏 2700K → 夜 1800K', shadow:'长影 · 已录制 20 帧', particle:'尘埃 8% · 逆光' },
+  s_watertown: { type:'scene', title:'江南古镇水巷', code:'SCN-0141', icon:'🏞️', grad:'linear-gradient(135deg,#22d3ee,#0891b2)', cat:'古代',
+    layout:'河道 + 两岸民居 + 石拱桥', flow:'巷口 → 石桥 → 沿河廊道', opening:'木门 ×8 · 花窗 ×12', sHeight:'民居 2.8m', depth:'河道纵深 60m', terrain:'地表起伏高度图（石阶 12 级）', veg:'垂柳 6 株 · 密度 22%', water:'水体反射率 0.35 · 微波纹', ior:'水 1.33', fog:'晨雾浓度中（0.4）', baseColor:'青石板 <span class="color-swatch" style="background:#8a8f8b;"></span>', sun:'偏角 25° · 5000K', colortemp:'晨雾 6500K → 午 5000K' },
+  s_palace: { type:'scene', title:'皇宫金銮殿', code:'SCN-0118', icon:'🏯', grad:'linear-gradient(135deg,#fca5a5,#b91c1c)', cat:'古代',
+    layout:'中轴对称 · 龙椅居中 · 立柱 ×12', flow:'午门 → 御道 → 丹陛 → 龙椅', opening:'朱漆大门 ×1 · 隔扇 ×8', sHeight:'9.0 m', depth:'36 m', spacing:'立柱间距 6m', baseColor:'金砖地面 <span class="color-swatch" style="background:#b8860b;"></span>', metal:'鎏金构件 1.0', ao:'藻井重 AO', sun:'高窗天光 · 4000K', light:'蟠龙烛台 ×8 · 暖调', lumen:'烛光 800 lm', colortemp:'恒定 3000K 烛光' },
+  s_inn: { type:'scene', title:'古镇客栈大堂', code:'SCN-0096', icon:'🏮', grad:'linear-gradient(135deg,#fdba74,#c2410c)', cat:'古代',
+    layout:'一层大堂 + 二层回廊 + 柜台', flow:'大门 → 大堂 → 楼梯 → 客房', opening:'木门 ×1 · 支摘窗 ×6', sHeight:'4.2 m', depth:'14 m', baseColor:'木地板 <span class="color-swatch" style="background:#6b4423;"></span>', rough:'木面 0.7', light:'红灯笼 ×10 · 烛台 ×4', lumen:'灯笼 600 lm', particle:'炊烟 12%', colortemp:'恒定 2500K 暖光' },
+  s_cafe: { type:'scene', title:'网红咖啡馆', code:'SCN-0072', icon:'☕', grad:'linear-gradient(135deg,#6ee7b7,#047857)', cat:'现代',
+    layout:'吧台 + 卡座 + 落地窗', flow:'入口 → 点单吧台 → 卡座区', opening:'玻璃门 ×1 · 落地窗 ×3', sHeight:'3.0 m', depth:'9.5 m', baseColor:'水磨石 <span class="color-swatch" style="background:#d6d3d1;"></span>', metal:'黄铜吊灯 0.9', ao:'AO 已烘焙', ior:'玻璃 1.52', sun:'侧窗自然光 · 4000K', light:'轨道射灯 ×12', lumen:'2400 lm' },
+  // —— 服饰 ——
+  c_gown: { type:'costume', title:'红色高定晚礼服', code:'CLO-0455', icon:'👗', grad:'linear-gradient(135deg,#f87171,#dc2626)', cat:'现代',
+    shape:'X 型', len:'148 cm（及地）', sleeve:'无袖', slit:'62 cm（高开衩）', order:'内衬 → 主裙身 → 外层薄纱', collar:'V 领 · 无袖口', soft:'弯曲刚度 0.18（柔软）', drape:'0.85（高垂坠）', elastic:'弹性模量 2.4 MPa', thick:'0.6 mm', craft:'珠片刺绣 + 提花', unit:'玫瑰纹 · 单元 4×4cm', wrinkle:'腰部收褶图已固定', button:'隐形拉链无纽扣', zipper:'后中直线 55cm', thread:'<span class="color-swatch" style="background:#b3122a;"></span>#B3122A 酒红', pattern:'西式玫瑰刺绣' },
+  c_suit: { type:'costume', title:'深灰三件套西装', code:'CLO-0388', icon:'🤵', grad:'linear-gradient(135deg,#94a3b8,#475569)', cat:'现代',
+    shape:'H 型', len:'常规西装长', sleeve:'长袖', slit:'后开衩 22cm', order:'衬衫 → 马甲 → 西装外套', collar:'枪驳领 · 双扣袖口', soft:'弯曲刚度 0.42（挺括）', drape:'0.45', elastic:'弹性模量 4.2 MPa', thick:'1.2 mm', craft:'精纺羊毛平织', wrinkle:'肘部微褶', button:'牛角扣 · 反光率 0.3', zipper:'裤门襟 18cm', thread:'<span class="color-swatch" style="background:#374151;"></span>#374151 深灰', pattern:'细斜纹' },
+  c_ruqun: { type:'costume', title:'唐制齐胸襦裙', code:'CLO-0301', icon:'🥻', grad:'linear-gradient(135deg,#c084fc,#9333ea)', cat:'古代',
+    shape:'A 型', len:'裙长 130cm', sleeve:'大袖', slit:'无（齐胸系带）', order:'诃子 → 襦 → 齐胸裙 → 披帛', collar:'交领 · 广袖口', soft:'弯曲刚度 0.15（柔软飘逸）', drape:'0.90（极高垂坠）', elastic:'弹性模量 1.8 MPa', thick:'0.4 mm', craft:'宝相花提花 + 手绘', unit:'宝相花 · 单元 8×8cm', wrinkle:'裙裥 12 道', button:'系带无纽扣', thread:'<span class="color-swatch" style="background:#9333ea;"></span>#9333EA 紫', pattern:'唐代宝相花', totem:'缠枝纹矢量' },
+  c_armor: { type:'costume', title:'明光将军铠甲', code:'CLO-0277', icon:'🛡️', grad:'linear-gradient(135deg,#fbbf24,#a16207)', cat:'古代',
+    shape:'H 型', len:'及膝', sleeve:'披膊', slit:'两侧战裙开衩', order:'战袍 → 胸甲 → 披膊 → 腿裙', collar:'盆领 · 护臂', soft:'弯曲刚度 0.90（刚硬）', drape:'0.20', elastic:'钢片近刚体', thick:'甲片 2.5 mm', craft:'鱼鳞甲片编缀', unit:'甲片 · 单元 3×5cm', wrinkle:'皮革连接处', button:'皮带扣 ×6', rivet:'铜铆钉间距 25mm', thread:'<span class="color-swatch" style="background:#a16207;"></span>#A16207 铜', pattern:'兽面纹', totem:'饕餮纹矢量' },
+  c_changpao: { type:'costume', title:'书生青衫长袍', code:'CLO-0233', icon:'👘', grad:'linear-gradient(135deg,#5eead4,#0f766e)', cat:'古代',
+    shape:'A 型', len:'及踝', sleeve:'直裾广袖', slit:'无', order:'中衣 → 长衫 → 腰带', collar:'交领右衽 · 广袖', soft:'弯曲刚度 0.20（柔软）', drape:'0.82（高垂坠）', elastic:'弹性模量 2.0 MPa', thick:'0.5 mm', craft:'素麻平织', wrinkle:'袖口自然垂褶', button:'系带', thread:'<span class="color-swatch" style="background:#0f766e;"></span>#0F766E 青', pattern:'素面无纹' },
+  c_street: { type:'costume', title:'潮牌机能夹克', code:'CLO-0198', icon:'🧥', grad:'linear-gradient(135deg,#fca5a5,#e11d48)', cat:'现代',
+    shape:'O 型', len:'短款 60cm', sleeve:'长袖 · 罗纹袖口', slit:'无', order:'卫衣 → 机能夹克', collar:'立领 · 罗纹口', soft:'弯曲刚度 0.55（硬挺）', drape:'0.35', elastic:'弹性模量 5.0 MPa', thick:'1.4 mm', craft:'防水尼龙 + 热压', wrinkle:'机能压褶', button:'磁吸暗扣', zipper:'YKK 双头拉链 · 斜插', rivet:'金属气眼间距 30mm', thread:'<span class="color-swatch" style="background:#e11d48;"></span>#E11D48 荧光红', pattern:'反光条印花' },
+  // —— 道具 ——
+  pr_sword: { type:'prop', title:'古龙纹长剑', code:'PRP-0620', icon:'⚔️', grad:'linear-gradient(135deg,#fb923c,#ea580c)', cat:'古代',
+    body:'剑身 · 独立建模', handle:'缠绳握把 · 坐标 (0,0,-42)', blade:'双刃 · 尖端坐标 (0,0,68)', knob:'无', axis:'剑格铆接点 ×2', movable:'无（刚体）', rotate:'N/A', wear:'划痕密度 35%', paint2:'剑格边缘', rust:'包浆 40%', blood:'剑身 30° 斜向喷溅', fingerprint:'握把处轻微', hold:'单手 / 双手可切换', holdpos:'(0,0,-38)（防穿模）', force:'劈砍 45°', anchor:'<span class="attr-badge">剑尖发光 (0,0,68)</span><span class="attr-badge">剑身粒子</span>' },
+  pr_phone: { type:'prop', title:'智能手机', code:'PRP-0533', icon:'📱', grad:'linear-gradient(135deg,#38bdf8,#0284c7)', cat:'现代',
+    body:'一体机身 · 玻璃背板', handle:'无', blade:'无', knob:'电源键 / 音量键', axis:'无', movable:'屏幕 UI 可交互', rotate:'横竖屏旋转', wear:'边框划痕 10%', paint2:'无', rust:'无', fingerprint:'屏幕指纹密度中', water2:'无', hold:'单手握持', holdpos:'(0,0,0) 中心', force:'点按 · 轻压', anchor:'<span class="attr-badge">屏幕发光</span>' },
+  pr_glass: { type:'prop', title:'水晶红酒杯', code:'PRP-0410', icon:'🍷', grad:'linear-gradient(135deg,#a3e635,#65a30d)', cat:'现代',
+    body:'杯体 + 杯柄 + 杯座', handle:'杯柄 · 坐标 (0,0,-60)', blade:'无', knob:'无', axis:'无', movable:'无（刚体）', wear:'划痕密度 5%', rust:'无', water2:'杯壁水珠凝结度 60%', fingerprint:'杯身指纹轻微', hold:'拇指食指捏杯柄', holdpos:'(0,0,-60)（防穿模）', force:'轻握', anchor:'<span class="attr-badge">液体折射</span>', ior:'水晶 1.55' },
+  pr_umbrella: { type:'prop', title:'油纸伞', code:'PRP-0366', icon:'🌂', grad:'linear-gradient(135deg,#f9a8d4,#be185d)', cat:'古代',
+    body:'伞面 + 伞骨 + 伞柄', handle:'竹伞柄 · 坐标 (0,0,-70)', blade:'无', knob:'开合推钮', axis:'伞头联动轴 ×1', movable:'开合可动', rotate:'伞骨开合角 0°~140°', wear:'伞面做旧 25%', rust:'竹骨包浆 30%', blood:'无', water2:'雨滴滑落轨迹', hold:'单手持柄', holdpos:'(0,0,-70)（防穿模）', force:'撑举', anchor:'<span class="attr-badge">雨滴粒子</span>' },
+  pr_lantern: { type:'prop', title:'宫灯', code:'PRP-0322', icon:'🏮', grad:'linear-gradient(135deg,#fca5a5,#dc2626)', cat:'古代',
+    body:'灯架 + 绢面 + 流苏', handle:'提梁 · 坐标 (0,0,80)', blade:'无', knob:'无', axis:'流苏摆动轴', movable:'流苏随风摆动', rotate:'流苏摆幅 ±15°', wear:'绢面做旧 20%', rust:'木架包浆 35%', water2:'无', hold:'提梁悬挂 / 手持', holdpos:'(0,0,80)', force:'提举', anchor:'<span class="attr-badge">烛芯发光</span><span class="attr-badge">暖光溢出</span>' },
+  pr_car: { type:'prop', title:'豪华轿车', code:'PRP-0288', icon:'🚗', grad:'linear-gradient(135deg,#818cf8,#4338ca)', cat:'现代',
+    body:'车身 + 四门 + 底盘', handle:'门把手 ×4', blade:'无', knob:'方向盘 / 挡杆', axis:'车门铰链 ×4 · 车轮轴 ×4', movable:'车门 / 车轮可动', rotate:'车门开合 0°~70° · 车轮 360°', wear:'漆面划痕 8%', paint2:'无', rust:'无', fingerprint:'门把手指纹', water2:'车漆水珠', hold:'—', holdpos:'—', force:'—', anchor:'<span class="attr-badge">车灯发光</span><span class="attr-badge">尾气粒子</span>' },
+  // —— 风格 ——
+  st_cyber: { type:'style', title:'赛博朋克 · 霓虹', code:'STY-0088', icon:'🌃', grad:'linear-gradient(135deg,#c026d3,#7c3aed)',
+    comp:'对角线 + 三分法', compRatio:'35% ~ 45%', focal:'85mm（畸变 0.02）', dof:'f/1.8（浅景深）', flare:'霓虹条形炫光库 ×6', colorMain:'<span class="color-swatch" style="background:#7c3aed;"></span>紫 / <span class="color-swatch" style="background:#22d3ee;"></span>青 / <span class="color-swatch" style="background:#f43f5e;"></span>品红', hsl:'H 270-190 · S 70-90% · L 40-60%', sat:'LUT: 饱和 +25 · 对比 +18', split:'高光偏青 · 阴影偏紫', brush:'数字写实 · 赛璐珞高光', line:'硬边 · 断连逻辑低', culture1:'霓虹紫青比例 6 : 4', culture2:'N/A（非水墨）', grain:'大小 0.4 · 分布均匀', softlight:'黑柔 0.3', blur:'长度 12px', scan:'弱（0.1）', vhs:'R +3 / B -2', bw:'S 型 · 未启用' },
+  st_film: { type:'style', title:'复古胶片 · 电影感', code:'STY-0061', icon:'🎞️', grad:'linear-gradient(135deg,#f43f5e,#be123c)',
+    comp:'黄金螺旋 + 中央构图', compRatio:'40% ~ 55%', focal:'35mm（畸变 0.03）', dof:'f/2.0', flare:'anamorphic 横向蓝色炫光', colorMain:'<span class="color-swatch" style="background:#b45309;"></span>橙 / <span class="color-swatch" style="background:#1e3a5f;"></span>青蓝', hsl:'H 20-210 · S 40-60% · L 35-55%', sat:'LUT: 柯达 2383 · 对比 +12', split:'高光偏暖 · 阴影偏青', brush:'胶片写实', line:'柔边', culture1:'暖橙青蓝比例 5 : 5', culture2:'N/A', grain:'颗粒大小 0.7 · 明显', softlight:'黑柔 0.5', blur:'长度 16px', scan:'无', vhs:'轻微 R +1', bw:'S 型 · 弱启用' },
+  st_ink: { type:'style', title:'国潮水墨', code:'STY-0044', icon:'🖌️', grad:'linear-gradient(135deg,#2dd4bf,#0d9488)',
+    comp:'三分法 + 留白', compRatio:'25% ~ 40%（大留白）', focal:'50mm（畸变 0.01）', dof:'f/4.0', flare:'柔和无炫光', colorMain:'<span class="color-swatch" style="background:#1c1917;"></span>墨 / <span class="color-swatch" style="background:#f5f5f4;"></span>宣纸白 / <span class="color-swatch" style="background:#b91c1c;"></span>朱砂', hsl:'H 0-30 低饱 · S 10-40% · L 20-90%', sat:'LUT: 低饱水墨 · 对比 +8', split:'高光偏暖白 · 阴影偏墨', brush:'水彩纸纹 · 毛笔飞白', line:'粗细变化大 · 断连（手绘感）', culture1:'国潮水墨晕染扩散速度系数 0.6', culture2:'晕染扩散 0.6（宣纸洇开）', grain:'宣纸纹理颗粒 0.5', softlight:'白柔 0.4', blur:'长度 6px', scan:'无', vhs:'无', bw:'水墨浓淡曲线' }
+};
+
+function showAssetDetail(id) {
+  var a = ASSET_DATA[id];
+  if (!a || !TPL[a.type]) return;
+  var typeName = { person:'人物', scene:'场景', costume:'服饰', prop:'道具', style:'风格' }[a.type];
+  var catBadge = a.cat ? '<span class="attr-badge">' + a.cat + '</span> ' : '';
+  var titleEl = document.getElementById('asset-detail-title');
+  titleEl.innerHTML =
+    '<div style="display:flex; align-items:center; gap:12px;">' +
+      '<div style="width:44px; height:44px; border-radius:10px; display:flex; align-items:center; justify-content:center; font-size:22px; background:' + a.grad + ';">' + a.icon + '</div>' +
+      '<div>' +
+        '<h3 style="margin:0;">' + a.title + '</h3>' +
+        '<div style="font-size:12px; color:#94a3b8; margin-top:2px;"><span class="attr-badge">' + typeName + '资产</span> ' + catBadge + a.code + '</div>' +
+      '</div>' +
+    '</div>';
+  var layers = TPL[a.type](a);
+  var html = '';
+  layers.forEach(function(layer){
+    html += '<div class="detail-layer">';
+    html += '<div class="detail-layer-head"><span class="dl-dot"></span>' + layer.name + '</div>';
+    layer.groups.forEach(function(g){
+      html += '<div class="detail-group"><div class="dg-title">' + g.title + '</div>';
+      g.attrs.forEach(function(at){
+        html += '<div class="attr-row"><div class="attr-k">' + at[0] + '</div><div class="attr-v">' + at[1] + '</div></div>';
+      });
+      html += '</div>';
+    });
+    html += '</div>';
+  });
+  document.getElementById('asset-detail-body').innerHTML = html;
+  showModal('asset-detail-modal');
 }
 
 // 树形展开/折叠
@@ -4040,6 +4930,34 @@ function showModal(id) {
 function hideModal(id) {
   document.getElementById(id).classList.remove('show');
 }
+// 记录当前预览的裂变前贴名称
+var currentPreviewName = '';
+// 打开「指定后链路工作流」弹窗
+function openPostlink(name) {
+  var t = document.getElementById('postlink-modal-target');
+  if (t) t.textContent = name ? '— ' + name : '— 裂变前贴产出后自动衔接生成完整素材';
+  showModal('postlink-modal');
+}
+// 点击缩略图/预览：打开裂变前贴预览弹窗
+function openFissionPreview(name) {
+  currentPreviewName = name || '';
+  var n = document.getElementById('fission-preview-name');
+  if (n) n.textContent = name ? '— ' + name : '';
+  showModal('fission-preview-modal');
+}
+// 预览弹窗内跳转到「指定后链路工作流」
+function openPostlinkFromPreview() {
+  hideModal('fission-preview-modal');
+  openPostlink(currentPreviewName);
+}
+// 展开/收起「创意拆解」内容
+function toggleCreativeBreakdown(btn) {
+  var block = document.getElementById('creative-breakdown');
+  if (!block) return;
+  var show = block.style.display === 'none' || !block.style.display;
+  block.style.display = show ? 'block' : 'none';
+  if (btn) btn.textContent = show ? '收起拆解' : '创意拆解';
+}
 // 点击遮罩关闭
 document.querySelectorAll('.modal-overlay').forEach(m => {
   m.addEventListener('click', function(e) {
@@ -4064,6 +4982,17 @@ document.querySelectorAll('.checkbox').forEach(cb => {
 
 // 裂变类型卡片切换（多选）
 function toggleFissionType(el) {
+  if (el.classList.contains('disabled')) return;
+  var fk = el.getAttribute('data-fk');
+  // 创意复刻 与 框架复用裂变 互斥
+  if (!el.classList.contains('selected') && (fk === 'recreate' || fk === 'frame')) {
+    var otherFk = (fk === 'recreate') ? 'frame' : 'recreate';
+    var other = document.querySelector('.fission-type-card[data-fk="' + otherFk + '"]');
+    if (other && other.classList.contains('selected')) {
+      other.classList.remove('selected');
+      alert('「创意复刻」与「框架复用裂变」不能同时选择，已自动取消另一项。');
+    }
+  }
   el.classList.toggle('selected');
   renderFissionParams();
 }
@@ -4185,6 +5114,20 @@ function switchFissionMode(el, mode) {
   document.getElementById('fission-batch').style.display = (mode === 'batch') ? 'block' : 'none';
 }
 
+// 裂变模式切换（单选按钮：种子裂变/前贴文案裂变）
+function switchFissionModeRadio(el) {
+  var mode = el.value;
+  document.getElementById('fission-single').style.display = (mode === 'single') ? 'block' : 'none';
+  document.getElementById('fission-batch').style.display = (mode === 'batch') ? 'block' : 'none';
+}
+
+// 发起裂变任务弹窗：裂变模式联动（种子裂变→选择种子前贴 / 前贴文案裂变→选择前贴文案）
+function switchModalFissionMode(el) {
+  var mode = el.value;
+  document.getElementById('modal-seed-block').style.display = (mode === 'seed') ? 'block' : 'none';
+  document.getElementById('modal-copy-block').style.display = (mode === 'copy') ? 'block' : 'none';
+}
+
 // 批次任务展开/收起子任务
 function toggleBatchRow(row) {
   var detail = row.nextElementSibling;
@@ -4231,7 +5174,7 @@ function switchApproveTagMode(mode) {
   var manual = mode === 'manual';
   document.getElementById('approve-tag-manual').classList.toggle('active', manual);
   document.getElementById('approve-tag-ai').classList.toggle('active', !manual);
-  document.getElementById('approve-tag-fields').style.display = manual ? 'flex' : 'none';
+  document.getElementById('approve-tag-fields').style.display = manual ? 'block' : 'none';
   document.getElementById('approve-tag-ai-hint').style.display = manual ? 'none' : 'block';
 }
 
@@ -4490,6 +5433,10 @@ document.addEventListener('DOMContentLoaded', function(){
   initCascader('imp-o2o-cascader-1', tagTree, { placeholder: '选择标签…', minWidth: '200px' });
   initCascader('imp-o2o-cascader-2', tagTree, { placeholder: '选择标签…', minWidth: '200px' });
   initCascader('imp-o2o-cascader-3', tagTree, { placeholder: '选择标签…', minWidth: '200px' });
+  // 外部素材"通过并录入种子库"标签级联选择器（与"新增种子前贴"完全一致）
+  initCascader('approve-cascader', tagTree, { placeholder: '选择标签：维度 / 分类 / 具体标签', minWidth: '240px' });
+  // 外部素材"批量通过"标签级联选择器（与"新增种子前贴"完全一致）
+  initCascader('batch-cascader', tagTree, { placeholder: '选择标签：维度 / 分类 / 具体标签', minWidth: '240px' });
 });
 </script>
 
